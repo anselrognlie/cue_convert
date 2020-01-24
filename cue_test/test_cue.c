@@ -60,6 +60,8 @@ static const int s_transformed_sheet_num_lines = sizeof(s_transformed_sheet) / s
 
 #define GET_SIZE(arr) (arr),sizeof((arr))/sizeof(*(arr))
 
+static void dump_string_array(char const * const *array, int num_lines);
+
 void test_cue(void) {
 
   printf("Checking cue output... ");
@@ -157,7 +159,15 @@ void test_cue_transform(void) {
     printf("FAILED!\n");
   }
 
+  //dump_string_array(writer.lines, writer.num_lines);
+
   array_line_writer_uninit(&writer);
   cue_sheet_free(transformed);
   cue_sheet_free(sheet);
+}
+
+static void dump_string_array(char const* const* array, int num_lines) {
+  for (int i = 0; i < num_lines; ++i) {
+    printf("%s\n", array[i]);
+  }
 }
