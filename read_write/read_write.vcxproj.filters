@@ -33,6 +33,9 @@
     <ClInclude Include="line_writer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="directory_traversal_handler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="array_line_reader.c">

@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="array_line_reader.h" />
     <ClInclude Include="array_line_writer.h" />
+    <ClInclude Include="directory_traversal_handler.h" />
     <ClInclude Include="file_line_reader.h" />
     <ClInclude Include="file_line_writer.h" />
     <ClInclude Include="line_reader.h" />

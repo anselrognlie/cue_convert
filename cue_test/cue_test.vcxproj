@@ -27,6 +27,7 @@
     <ClCompile Include="test_cue.c" />
     <ClCompile Include="test_getline.c" />
     <ClCompile Include="test_helpers.c" />
+    <ClCompile Include="test_traverse_dirs.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
