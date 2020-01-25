@@ -60,8 +60,6 @@ static const int s_transformed_sheet_num_lines = sizeof(s_transformed_sheet) / s
 
 #define GET_SIZE(arr) (arr),sizeof((arr))/sizeof(*(arr))
 
-static void dump_string_array(char const * const *array, int num_lines);
-
 void test_cue(void) {
 
   printf("Checking cue output... ");
@@ -79,7 +77,7 @@ void test_cue(void) {
   array_line_writer_init(&writer);
   cue_sheet_write(sheet, &writer.line_writer);
 
-  if (compare_arrays(s_cue_sheet, s_cue_sheet_num_lines, writer.lines, writer.num_lines)) {
+  if (compare_string_arrays(s_cue_sheet, s_cue_sheet_num_lines, writer.lines, writer.num_lines)) {
     printf("passed.\n");
   }
   else {
@@ -114,7 +112,7 @@ void test_cue_copy(void) {
   array_line_writer_init(&writer);
   cue_sheet_write(copy, &writer.line_writer);
 
-  if (compare_arrays(s_cue_sheet, s_cue_sheet_num_lines, writer.lines, writer.num_lines)) {
+  if (compare_string_arrays(s_cue_sheet, s_cue_sheet_num_lines, writer.lines, writer.num_lines)) {
     printf("passed.\n");
   }
   else {
@@ -152,7 +150,7 @@ void test_cue_transform(void) {
   array_line_writer_init(&writer);
   cue_sheet_write(transformed, &writer.line_writer);
 
-  if (compare_arrays(s_transformed_sheet, s_transformed_sheet_num_lines, writer.lines, writer.num_lines)) {
+  if (compare_string_arrays(s_transformed_sheet, s_transformed_sheet_num_lines, writer.lines, writer.num_lines)) {
     printf("passed.\n");
   }
   else {
@@ -166,8 +164,3 @@ void test_cue_transform(void) {
   cue_sheet_free(sheet);
 }
 
-static void dump_string_array(char const* const* array, int num_lines) {
-  for (int i = 0; i < num_lines; ++i) {
-    printf("%s\n", array[i]);
-  }
-}
