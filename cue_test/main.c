@@ -10,6 +10,9 @@
 
 #include "all_tests.h"
 
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+
 int main(int argc, char const* argv[]) {
 #ifdef MEMCHECK
   _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
@@ -19,4 +22,6 @@ int main(int argc, char const* argv[]) {
   test_cue();
   test_cue_copy();
   test_cue_transform();
+  test_list_dir();
+  test_traverse_dirs();
 }

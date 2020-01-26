@@ -36,6 +36,15 @@
     <ClInclude Include="directory_traversal_handler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Header.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="filesystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="directory_traversal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="array_line_reader.c">
@@ -48,6 +57,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="file_line_writer.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="directory_traversal.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="filesystem_win.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

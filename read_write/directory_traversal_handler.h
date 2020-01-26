@@ -1,8 +1,10 @@
 #pragma once
 
-struct directory_traveral_handler;
+struct file_handle;
+struct directory_entry;
 
 typedef struct directory_traveral_handler {
   void* self;
-  size_t(*visit)(struct directory_traveral_handler* self, char const** line_out, size_t* bytes_out);
+  // return true to continue traversal, or false to halt
+  short (*visit)(struct directory_traveral_handler* self, struct file_handle *directory, struct directory_entry *entry);
 } directory_traveral_handler_i;

@@ -35,7 +35,7 @@
     <ClCompile Include="test_helpers.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test_traverse_dirs.c">
+    <ClCompile Include="test_dirs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

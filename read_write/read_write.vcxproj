@@ -21,15 +21,20 @@
   <ItemGroup>
     <ClInclude Include="array_line_reader.h" />
     <ClInclude Include="array_line_writer.h" />
+    <ClInclude Include="directory_traversal.h" />
     <ClInclude Include="directory_traversal_handler.h" />
+    <ClInclude Include="filesystem.h" />
     <ClInclude Include="file_line_reader.h" />
     <ClInclude Include="file_line_writer.h" />
+    <ClInclude Include="Header.h" />
     <ClInclude Include="line_reader.h" />
     <ClInclude Include="line_writer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="array_line_reader.c" />
     <ClCompile Include="array_line_writer.c" />
+    <ClCompile Include="directory_traversal.c" />
+    <ClCompile Include="filesystem_win.c" />
     <ClCompile Include="file_line_reader.c" />
     <ClCompile Include="file_line_writer.c" />
   </ItemGroup>
