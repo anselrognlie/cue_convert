@@ -24,4 +24,6 @@ int main(int argc, char const* argv[]) {
   test_cue_transform();
   test_list_dir();
   test_traverse_dirs();
+  test_enumerate_path();
+  test_ensure_path();
 }

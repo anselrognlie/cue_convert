@@ -8,6 +8,9 @@
 #include <wchar.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+
+#include "mem_helpers.h"
 
 static char const s_path_wildcard[] = "\\*";
 static const size_t s_path_wildcard_len = sizeof(s_path_wildcard) - 1;

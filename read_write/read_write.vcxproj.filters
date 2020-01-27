@@ -36,13 +36,16 @@
     <ClInclude Include="directory_traversal_handler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Header.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="filesystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="directory_traversal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="path.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="path_shared.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -63,6 +66,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="filesystem_win.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="filesystem_shared.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="path_win.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="path_shared.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

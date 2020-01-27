@@ -6,6 +6,7 @@
 #include "filesystem.h"
 #include "directory_traversal.h"
 #include "directory_traversal_handler.h"
+#include "path.h"
 
 const char s_test_dir[] = "..\\test_data\\test_dir";
 
@@ -163,4 +164,24 @@ void test_list_dir(void) {
   if (i != s_test_list_dir_result_len) passed = 0;
 
   printf("%s\n", passed ? "passed." : "FAILED!");
+}
+
+void test_ensure_path(void) {
+  //ensure_path("r:\\emu\\roms\\pcecd\\a\\akumajo");
+}
+
+static void print_path_enumeration(char const *path) {
+  path_enumerator_i* e = enumerate_path(path);
+  while (e->has_next(e)) {
+    path_enumerate_status_t status = e->next(e);
+    printf("%.*s\n", status.path_end - status.full_path_start, status.full_path_start);
+  }
+
+  e->dispose(e);
+}
+
+void test_enumerate_path(void) {
+  print_path_enumeration("r:\\emu\\roms\\pcecd\\a\\akumajo");
+  print_path_enumeration("r:\\emu\\.\\.\\.\\akumajo");
+  print_path_enumeration("r:\\emu\\.\\..\\.\\akumajo");
 }
