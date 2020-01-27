@@ -107,33 +107,35 @@ errno_t ps_start_path_enumeration(ps_path_enumerator_t* self) {
 }
 
 errno_t ps_next_path_enumeration(ps_path_enumerator_t* self) {
-  // bail if we reached the end
-  size_t len = self->path_len;
-  if (self->path + len == self->path_end) {
-    self->has_next = 0;
-    return 0;
-  }
+  path_enumerate_status_t status;
+  
+  do {
+    // bail if we reached the end
+    size_t len = self->path_len;
+    if (self->path + len == self->path_end) {
+      self->has_next = 0;
+      return 0;
+    }
 
-  // advance the starting location
-  char *path_start = self->path_end + 1;
-  if (self->path + len < path_start) {
-    self->has_next = 0;
-    return 0;
-  }
+    // advance the starting location
+    char* path_start = self->path_end + 1;
+    if (self->path + len < path_start) {
+      self->has_next = 0;
+      return 0;
+    }
 
-  char *path_end = strchr(path_start, self->path_separator);
-  if (!path_end) {
-    path_end = self->path + len;
-  }
+    char* path_end = strchr(path_start, self->path_separator);
+    if (!path_end) {
+      path_end = self->path + len;
+    }
 
-  self->path_start = path_start;
-  self->path_end = path_end;
-  self->has_next = 1;
+    self->path_start = path_start;
+    self->path_end = path_end;
+    self->has_next = 1;
 
-  path_enumerate_status_t status = get_path_status(self);
-  if (ps_should_skip_path(self, &status)) {
-    return ps_next_path_enumeration(self);
-  }
+    path_enumerate_status_t status = get_path_status(self);
+
+  } while (ps_should_skip_path(self, &status));
 
   return 0;
 }
