@@ -68,9 +68,6 @@
     <ClCompile Include="filesystem_win.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="filesystem_shared.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="path_win.c">
       <Filter>Source Files</Filter>
     </ClCompile>

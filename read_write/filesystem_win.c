@@ -11,6 +11,11 @@
 #include <stdio.h>
 
 #include "mem_helpers.h"
+#include "directory_traversal.h"
+#include "directory_traversal_handler.h"
+#include "path.h"
+
+//#define PRINT_ONLY
 
 static char const s_path_wildcard[] = "\\*";
 static const size_t s_path_wildcard_len = sizeof(s_path_wildcard) - 1;
@@ -26,11 +31,11 @@ typedef struct fs_file_handle {
 } fs_file_handle_t;
 
 static void fs_file_handle_init(fs_file_handle_t* self);
-static short fs_is_eof(file_handle_i* self);
+static short fs_is_eof(file_handle_i const* self);
 static void fs_close_dir(file_handle_i* handle);
 static directory_entry_i* fs_next_dir_entry(file_handle_i* handle);
-static file_handle_i* fs_open_directory(file_handle_i* handle, char const *path);
-static char const* fs_get_path(file_handle_i* handle);
+static file_handle_i* fs_open_directory(file_handle_i const* handle, char const *path);
+static char const* fs_get_path(file_handle_i const* handle);
 
 typedef struct fs_directory_entry {
   directory_entry_i entry_i;
@@ -39,8 +44,8 @@ typedef struct fs_directory_entry {
 } fs_directory_entry_t;
 
 static void fs_entry_init(fs_directory_entry_t* self);
-static short fs_is_directory(struct directory_entry* self);
-static char const* fs_get_name(struct directory_entry* self);
+static short fs_is_directory(struct directory_entry const* self);
+static char const* fs_get_name(struct directory_entry const* self);
 static void fs_release(struct directory_entry* self);
 
 static wchar_t* widen_path(char const* path) {
@@ -154,7 +159,7 @@ file_handle_i* open_dir(char const* path) {
   result->path = state.path_duplicate;
 
   // unset state values that shouldn't be cleaned up
-  state.h = 0;
+  state.h = INVALID_HANDLE_VALUE;
   state.path_duplicate = NULL;
 
   release_open_dir_state(&state);
@@ -169,8 +174,8 @@ void fs_close_dir(file_handle_i* handle) {
   free(self);
 }
 
-short fs_is_eof(file_handle_i* handle) {
-  fs_file_handle_t* self = (fs_file_handle_t*)handle->self;
+short fs_is_eof(file_handle_i const* handle) {
+  fs_file_handle_t const* self = (fs_file_handle_t const*)handle->self;
   return self->eof;
 }
 
@@ -213,8 +218,8 @@ static char* join_path(char const* base, char const* path) {
   return joined;
 }
 
-static file_handle_i* fs_open_directory(file_handle_i* handle, char const* path) {
-  fs_file_handle_t *self = (fs_file_handle_t*)handle->self;
+static file_handle_i* fs_open_directory(file_handle_i const* handle, char const* path) {
+  fs_file_handle_t const *self = (fs_file_handle_t const*)handle->self;
 
   char *new_path = join_path(self->path, path);
   if (! new_path) return NULL;
@@ -226,8 +231,8 @@ static file_handle_i* fs_open_directory(file_handle_i* handle, char const* path)
   return new_handle;
 }
 
-static char const* fs_get_path(file_handle_i* handle) {
-  fs_file_handle_t* self = (fs_file_handle_t*)handle->self;
+static char const* fs_get_path(file_handle_i const* handle) {
+  fs_file_handle_t const* self = (fs_file_handle_t const*)handle->self;
   return self->path;
 }
 
@@ -238,13 +243,13 @@ static void fs_entry_init(fs_directory_entry_t* self) {
   self->entry_i.release = fs_release;
 }
 
-static short fs_is_directory(directory_entry_i* entry) {
-  fs_directory_entry_t* self = (fs_directory_entry_t*)entry->self;
+static short fs_is_directory(directory_entry_i const* entry) {
+  fs_directory_entry_t const* self = (fs_directory_entry_t const*)entry->self;
   return self->is_directory;
 }
 
-static char const* fs_get_name(directory_entry_i* entry) {
-  fs_directory_entry_t* self = (fs_directory_entry_t*)entry->self;
+static char const* fs_get_name(directory_entry_i const* entry) {
+  fs_directory_entry_t const* self = (fs_directory_entry_t const*)entry->self;
   return self->name;
 }
 
@@ -252,6 +257,160 @@ static void fs_release(directory_entry_i* entry) {
   fs_directory_entry_t* self = (fs_directory_entry_t*)entry->self;
   free(self->name);
   free(self);
+}
+
+errno_t delete_file(char const* path) {
+  BOOL result = 1;
+  wchar_t *path_w = widen_path(path);
+  if (! path_w) return -1;
+
+#ifndef PRINT_ONLY
+  result = DeleteFile(path_w);
+#else
+  result = 1;
+  printf("delete %ls\n", path_w);
+#endif
+
+  SAFE_FREE(path_w);
+
+  return ! result;
+}
+
+static errno_t remove_directory(char const* path) {
+  BOOL result = 1;
+  wchar_t* path_w = widen_path(path);
+  if (!path_w) return -1;
+
+#ifndef PRINT_ONLY
+  result = RemoveDirectory(path_w);
+#else
+  result = 1;
+  printf("remove %ls\n", path_w);
+#endif
+
+  SAFE_FREE(path_w);
+
+  return !result;
+}
+
+typedef struct delete_visiter {
+  directory_traveral_handler_i handler_i;
+} delete_visitor_t;
+
+static short dv_visit(struct directory_traveral_handler* self, directory_traversal_handler_state_t const* state) {
+  file_handle_i const* directory = state->directory;
+  directory_entry_i const* entry = state->entry;
+
+  char *full_path = join_path(directory->get_path(directory), entry->get_name(entry));
+  if (! full_path) return 0;
+
+  errno_t result;
+  if (! entry->is_directory(entry)) {
+    result = delete_file(full_path);
+  }
+  else {
+    result = remove_directory(full_path);
+  }
+
+  SAFE_FREE(full_path);
+
+  return ! result;
+}
+
+static void dv_init_visitor(delete_visitor_t* self) {
+  self->handler_i.self = self;
+  self->handler_i.visit = dv_visit;
+}
+
+errno_t delete_dir(char const* path) {
+  delete_visitor_t visitor;
+  dv_init_visitor(&visitor);
+
+  directory_traversal_options_t opts;
+  memset(&opts, 0, sizeof(opts));
+  opts.should_descend = 1;
+  opts.post_visit = 1;
+
+  errno_t result = 0;
+  short keep_traversing = traverse_dir_path_opts(path, &opts, &visitor.handler_i);
+  if (keep_traversing) {
+    result = remove_directory(path);
+  }
+
+  return result;
+}
+
+static errno_t create_directory(char const* path) {
+  BOOL result = 1;
+  wchar_t* path_w = widen_path(path);
+  if (!path_w) return -1;
+
+#ifndef PRINT_ONLY
+  result = CreateDirectory(path_w, NULL);
+  if (! result) {
+    DWORD error = GetLastError();
+    if (error == ERROR_ALREADY_EXISTS) {
+      result = 1;
+    }
+  }
+#else
+  result = 1;
+  printf("create %ls\n", path_w);
+#endif
+
+  SAFE_FREE(path_w);
+
+  return !result;
+}
+
+errno_t ensure_dir(char const* path) {
+  errno_t result = 0;
+
+  size_t path_len = strlen(path);
+  char* buf = malloc(path_len + 1);
+  if (! buf) return -1;
+
+  // enumerate the path
+  path_enumerator_i *i = enumerate_path(path);
+  if (!i) {
+    free(buf);
+    return -1;
+  }
+
+  memset(buf, 0, path_len + 1);
+
+  // check that each point has a directory created
+  while (i->has_next(i) && ! result) {
+    path_enumerate_status_t status = i->next(i);
+    size_t full_path_len = status.path_end - status.full_path_start;
+    memmove_s(buf, path_len + 1, status.full_path_start, full_path_len);
+    *(buf + full_path_len) = 0;
+
+    result = create_directory(buf);
+  }
+
+  i->dispose(i);
+  free(buf);
+
+  return result;
+}
+
+short file_exists(char const* path) {
+  WIN32_FIND_DATA ffd;
+  short result = 0;
+
+  wchar_t *path_w = widen_path(path);
+  if (!path_w) return 0;
+
+  HANDLE h = FindFirstFile(path_w, &ffd);
+
+  if (INVALID_HANDLE_VALUE != h) {
+    result = 1;
+    CloseHandle(h);
+  }
+
+  free(path_w);
+  return result;
 }
 
 #endif

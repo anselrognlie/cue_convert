@@ -74,6 +74,8 @@ static path_enumerate_status_t ps_next(struct path_enumerator* self_i) {
 static short ps_should_skip_path(ps_path_enumerator_t* self, path_enumerate_status_t const *status) {
   short skip = 0;
 
+  if (status->path_start == status->path_end) return 1;
+
   path_enumerator_rules_i *rules = self->rules;
   if (rules) {
     skip = rules->should_skip_path(rules, status);
@@ -133,7 +135,7 @@ errno_t ps_next_path_enumeration(ps_path_enumerator_t* self) {
     self->path_end = path_end;
     self->has_next = 1;
 
-    path_enumerate_status_t status = get_path_status(self);
+    status = get_path_status(self);
 
   } while (ps_should_skip_path(self, &status));
 

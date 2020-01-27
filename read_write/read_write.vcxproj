@@ -35,7 +35,6 @@
     <ClCompile Include="array_line_reader.c" />
     <ClCompile Include="array_line_writer.c" />
     <ClCompile Include="directory_traversal.c" />
-    <ClCompile Include="filesystem_shared.c" />
     <ClCompile Include="filesystem_win.c" />
     <ClCompile Include="file_line_reader.c" />
     <ClCompile Include="file_line_writer.c" />
