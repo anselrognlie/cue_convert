@@ -10,7 +10,7 @@
 static const char s_current_dir[] = ".";
 static const char s_parent_dir[] = "..";
 
-short traverse_dir_path_opts(char const* path, struct directory_traversal_options const* opts, struct directory_traveral_handler* handler) {
+short traverse_dir_path_opts(char const* path, struct directory_traversal_options const* opts, struct directory_traversal_handler* handler) {
   short result = 0;
   file_handle_i* dir = open_dir(path);
   if (dir) {
@@ -24,7 +24,7 @@ short traverse_dir_path_opts(char const* path, struct directory_traversal_option
   return result;
 }
 
-short traverse_dir_path(char const* path, struct directory_traveral_handler *handler) {
+short traverse_dir_path(char const* path, struct directory_traversal_handler *handler) {
   directory_traversal_options_t opts;
   memset(&opts, 0, sizeof(opts));
   opts.should_descend = 1;
@@ -46,7 +46,7 @@ static short should_traverse(directory_entry_i const* entry) {
   return should_visit(entry);
 }
 
-short traverse_dir_opts(file_handle_i* directory, struct directory_traversal_options const *opts, struct directory_traveral_handler* handler) {
+short traverse_dir_opts(file_handle_i* directory, struct directory_traversal_options const *opts, struct directory_traversal_handler* handler) {
   short keep_traversing = 1;
   file_handle_i* dir = directory;
 
@@ -67,7 +67,9 @@ short traverse_dir_opts(file_handle_i* directory, struct directory_traversal_opt
       state.entry = entry;
       state.last_entry = dir->is_eof(dir);
 
-      if (! opts->post_visit) keep_traversing = handler->visit(handler, &state);
+      if (! opts->post_visit && handler->visit) {
+        keep_traversing = handler->visit(handler, &state);
+      }
 
       if (should_traverse(entry) && keep_traversing && opts->should_descend) {
         file_handle_i* subdir = dir->open_directory(dir, entry->get_name(entry));
@@ -77,7 +79,13 @@ short traverse_dir_opts(file_handle_i* directory, struct directory_traversal_opt
         }
       }
 
-      if (opts->post_visit) keep_traversing = handler->visit(handler, &state);
+      if (opts->post_visit && handler->visit) {
+        keep_traversing = handler->visit(handler, &state);
+      }
+
+      if (handler->exit) {
+        keep_traversing = handler->exit(handler, &state);
+      }
 
       entry->release(entry);
       state.first_entry = 0;
@@ -87,7 +95,7 @@ short traverse_dir_opts(file_handle_i* directory, struct directory_traversal_opt
   return keep_traversing;
 }
 
-short traverse_dir(file_handle_i *directory, struct directory_traveral_handler* handler) {
+short traverse_dir(file_handle_i *directory, struct directory_traversal_handler* handler) {
   directory_traversal_options_t opts;
   memset(&opts, 0, sizeof(opts));
   opts.should_descend = 1;

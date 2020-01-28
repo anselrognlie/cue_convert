@@ -11,6 +11,7 @@
 const char s_test_dir[] = "..\\test_data\\test_dir";
 const char s_test_delete_dir[] = "..\\test_data\\ensure_dir";
 const char s_test_ensure_dir[] = "..\\test_data\\ensure_dir\\a\\dir\\to\\ensure";
+const char s_parallel_dir[] = "some_path";
 
 //#define PRINT_ONLY
 
@@ -76,11 +77,11 @@ static char const** s_path_enum_path_parts[] = {
 // print visitor
 //
 
-typedef struct print_visiter {
-  directory_traveral_handler_i handler_i;
+typedef struct print_visitor {
+  directory_traversal_handler_i handler_i;
 } print_visitor_t;
 
-static short pv_visit(struct directory_traveral_handler* self, directory_traversal_handler_state_t const *state) {
+static short pv_visit(struct directory_traversal_handler* self, directory_traversal_handler_state_t const *state) {
   file_handle_i const *directory = state->directory;
   directory_entry_i const *entry = state->entry;
   printf("%s\\%s%s%s%s\n", directory->get_path(directory), 
@@ -93,6 +94,7 @@ static short pv_visit(struct directory_traveral_handler* self, directory_travers
 }
 
 static void pv_init_visitor(print_visitor_t* self) {
+  memset(self, 0, sizeof(*self));
   self->handler_i.self = self;
   self->handler_i.visit = pv_visit;
 }
@@ -101,15 +103,15 @@ static void pv_init_visitor(print_visitor_t* self) {
 // compare visitor
 //
 
-typedef struct compare_visiter {
-  directory_traveral_handler_i handler_i;
+typedef struct compare_visitor {
+  directory_traversal_handler_i handler_i;
   short passed;
   size_t line;
   dir_entry_fields_t const *result;
   size_t result_len;
 } compare_visitor_t;
 
-static short cv_visit(directory_traveral_handler_i* self_i, directory_traversal_handler_state_t const* state) {
+static short cv_visit(directory_traversal_handler_i* self_i, directory_traversal_handler_state_t const* state) {
   compare_visitor_t *self = (compare_visitor_t *)self_i->self;
   file_handle_i const* directory = state->directory;
   directory_entry_i const* entry = state->entry;
@@ -142,6 +144,29 @@ static void cv_init_visitor(compare_visitor_t* self,
   self->passed = 1;
   self->result = result;
   self->result_len = result_len;
+}
+
+//
+// parallel traversal visitor
+//
+
+typedef struct parallel_traverse_visitor {
+  directory_traversal_handler_i handler_i;
+} parallel_traverse_visitor_t;
+
+static short ptv_visit(directory_traversal_handler_i* self_i, directory_traversal_handler_state_t const* state) {
+  parallel_traverse_visitor_t* self = (parallel_traverse_visitor_t*)self_i->self;
+  file_handle_i const* directory = state->directory;
+  directory_entry_i const* entry = state->entry;
+
+  return 1;
+}
+
+static void ptv_init_visitor(parallel_traverse_visitor_t* self) {
+
+  memset(self, 0, sizeof(*self));
+  self->handler_i.self = self;
+  self->handler_i.visit = ptv_visit;
 }
 
 //
@@ -286,3 +311,8 @@ void test_enumerate_path(void) {
   printf("%s\n", passed ? "passed." : "FAILED!");
 }
 
+void test_parallel_traverse(void) {
+  parallel_traverse_visitor_t visitor;
+  ptv_init_visitor(&visitor);
+
+}

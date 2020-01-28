@@ -11,6 +11,7 @@
 #include <stdio.h>
 
 #include "mem_helpers.h"
+#include "string_helpers.h"
 #include "directory_traversal.h"
 #include "directory_traversal_handler.h"
 #include "path.h"
@@ -20,7 +21,6 @@
 static char const s_path_wildcard[] = "\\*";
 static const size_t s_path_wildcard_len = sizeof(s_path_wildcard) - 1;
 static char const s_path_separator[] = "\\";
-static const size_t s_path_separator_len = sizeof(s_path_separator) - 1;
 
 typedef struct fs_file_handle {
   file_handle_i handle_i;
@@ -109,7 +109,7 @@ static void release_open_dir_state(open_dir_state_t* state) {
   if (state) {
     if (state->path_with_wildcard) free(state->path_with_wildcard);
     if (state->path_w) free(state->path_w);
-    if (state->h) CloseHandle(state->h);
+    if (state->h) FindClose(state->h);
     if (state->path_duplicate) free(state->path_duplicate);
   }
 }
@@ -202,31 +202,20 @@ directory_entry_i* fs_next_dir_entry(file_handle_i* handle) {
   return &result->entry_i;
 }
 
-static char* join_path(char const* base, char const* path) {
-  size_t base_len = strlen(base);
-  size_t sep_len = strlen(s_path_separator);
-  size_t path_len = strlen(path);
-
-  size_t joined_len = base_len + sep_len + path_len;
-  char *joined = malloc(joined_len + 1);
-  if (! joined) return NULL;
-
-  strcpy_s(joined, joined_len + 1, base);
-  strcat_s(joined, joined_len + 1, s_path_separator);
-  strcat_s(joined, joined_len + 1, path);
-
-  return joined;
+static char const* join_path(char const* base, char const* path) {
+  char const *strings[] = { base, path };
+  return join_strings(strings, 2, s_path_separator);
 }
 
 static file_handle_i* fs_open_directory(file_handle_i const* handle, char const* path) {
   fs_file_handle_t const *self = (fs_file_handle_t const*)handle->self;
 
-  char *new_path = join_path(self->path, path);
+  char const *new_path = join_path(self->path, path);
   if (! new_path) return NULL;
 
   file_handle_i *new_handle = open_dir(new_path);
 
-  free(new_path);
+  SAFE_FREE(new_path);
 
   return new_handle;
 }
@@ -293,15 +282,15 @@ static errno_t remove_directory(char const* path) {
   return !result;
 }
 
-typedef struct delete_visiter {
-  directory_traveral_handler_i handler_i;
+typedef struct delete_visitor {
+  directory_traversal_handler_i handler_i;
 } delete_visitor_t;
 
-static short dv_visit(struct directory_traveral_handler* self, directory_traversal_handler_state_t const* state) {
+static short dv_visit(struct directory_traversal_handler* self, directory_traversal_handler_state_t const* state) {
   file_handle_i const* directory = state->directory;
   directory_entry_i const* entry = state->entry;
 
-  char *full_path = join_path(directory->get_path(directory), entry->get_name(entry));
+  char const *full_path = join_path(directory->get_path(directory), entry->get_name(entry));
   if (! full_path) return 0;
 
   errno_t result;
@@ -318,6 +307,7 @@ static short dv_visit(struct directory_traveral_handler* self, directory_travers
 }
 
 static void dv_init_visitor(delete_visitor_t* self) {
+  memset(self, 0, sizeof(*self));
   self->handler_i.self = self;
   self->handler_i.visit = dv_visit;
 }
@@ -406,7 +396,7 @@ short file_exists(char const* path) {
 
   if (INVALID_HANDLE_VALUE != h) {
     result = 1;
-    CloseHandle(h);
+    FindClose(h);
   }
 
   free(path_w);

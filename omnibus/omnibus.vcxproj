@@ -22,11 +22,13 @@
     <ClInclude Include="file_helpers.h" />
     <ClInclude Include="format_helpers.h" />
     <ClInclude Include="mem_helpers.h" />
+    <ClInclude Include="string_helpers.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="file_helpers.c" />
     <ClCompile Include="format_helpers.c" />
     <ClCompile Include="mem_helpers.c" />
+    <ClCompile Include="string_helpers.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

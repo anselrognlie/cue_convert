@@ -17,7 +17,8 @@ int main(int argc, char const* argv[]) {
 #ifdef MEMCHECK
   _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
-  
+
+  test_string_join();
   test_getline();
   test_cue();
   test_cue_copy();
@@ -26,4 +27,5 @@ int main(int argc, char const* argv[]) {
   test_traverse_dirs();
   test_ensure_path();
   test_enumerate_path();
+  test_parallel_traverse();
 }

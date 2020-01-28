@@ -2,6 +2,10 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <stddef.h>
+
+#include "string_helpers.h"
+#include "mem_helpers.h"
 
 short compare_string_arrays(char const* const* arr1, int arr1_len, char const* const* arr2, int arr2_len) {
   if (arr1_len != arr2_len) return 0;
@@ -17,4 +21,31 @@ void dump_string_array(char const* const* array, int num_lines) {
   for (int i = 0; i < num_lines; ++i) {
     printf("%s\n", array[i]);
   }
+}
+
+static char const *strings[] = {
+  "join", "these", "strings", "together",
+};
+
+static const size_t s_strings_len = sizeof(strings) / sizeof(*strings);
+static char const *s_joined_string = "join..these..strings..together";
+
+void test_string_join(void) {
+  const size_t joined_len = strlen(s_joined_string);
+
+  printf("testing string join... ");
+  char const *joined = join_strings(strings, s_strings_len, "..");
+
+  short success = 0;
+  if (joined) {
+    success = 1;
+    //printf("[%s] ", joined);
+
+    if (strlen(joined) != joined_len) success = 0;
+    if (!success || strncmp(joined, s_joined_string, joined_len) != 0) success = 0;
+
+    SAFE_FREE(joined);
+  }
+
+  printf("%s\n", success ? "passed." : "FAILED!");
 }
