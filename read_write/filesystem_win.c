@@ -53,17 +53,14 @@ static void fs_release(struct directory_entry* self);
 static wchar_t* widen_path(char const* path) {
   // widen the path
   wchar_t* path_w = NULL;
-  errno_t result;
-  size_t result_size;
-  size_t path_len = strlen(path);
+  size_t written;
 
-  size_t path_w_len;
-  result = mbstowcs_s(&path_w_len, NULL, 0, path, path_len);
+  size_t path_w_len = MultiByteToWideChar(CP_UTF8, 0, path, -1, NULL, 0);
   path_w = malloc(path_w_len * sizeof(wchar_t));
   if (!path_w) return NULL;
 
-  result = mbstowcs_s(&result_size, path_w, path_w_len, path, path_len);
-  if (result) {
+  written = MultiByteToWideChar(CP_UTF8, 0, path, -1, path_w, path_w_len);
+  if (!written) {
     free(path_w);
     return NULL;
   }
@@ -73,17 +70,16 @@ static wchar_t* widen_path(char const* path) {
 
 static char* narrow_path(wchar_t const* path) {
   char* path_n = NULL;
-  errno_t result;
   size_t result_size;
   size_t path_len = wcslen(path);
 
-  result = wcstombs_s(&result_size, NULL, 0, path, path_len);
-  size_t path_n_len = (result_size + 1) * sizeof(char);
+  result_size = WideCharToMultiByte(CP_UTF8, 0, path, -1, NULL, 0, NULL, NULL);
+  size_t path_n_len = result_size * sizeof(char);
   path_n = malloc(path_n_len);
   if (!path_n) return NULL;
 
-  result = wcstombs_s(&result_size, path_n, path_n_len, path, path_len);
-  if (result) {
+  size_t written = WideCharToMultiByte(CP_UTF8, 0, path, -1, path_n, result_size, NULL, NULL);
+  if (!written) {
     free(path_n);
     return NULL;
   }
