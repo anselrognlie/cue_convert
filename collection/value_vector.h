@@ -138,3 +138,19 @@ errno_t vtype##_shift(struct vtype* self) { \
 errno_t vtype##_shift_keep(struct vtype* self, type* out) { \
   return value_vector_shift_keep(&self->self, (char*)out); \
 } \
+
+#define DECLARE_POD_VALUE_VECTOR(type) \
+extern struct value_vector_params type##_vector_ops; \
+typedef struct type##_vector { \
+  value_vector_t self; \
+} type##_vector_t; \
+DECLARE_VALUE_VECTOR(type##_vector, type)
+
+#define IMPLEMENT_POD_VALUE_VECTOR(type) \
+struct value_vector_params type##_vector_ops = { \
+  sizeof(type), \
+}; \
+IMPLEMENT_VALUE_VECTOR(type##_vector, type)
+
+DECLARE_POD_VALUE_VECTOR(int)
+DECLARE_POD_VALUE_VECTOR(double)

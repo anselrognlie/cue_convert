@@ -17,5 +17,7 @@ errno_t test_string_queue(void);
 errno_t test_string_vector_join(void);
 errno_t test_string_holder_char(void);
 errno_t test_string_holder_str(void);
+errno_t test_int_queue(void);
+errno_t test_double_queue(void);
 errno_t test_parallel_traverse(void);
 

@@ -203,3 +203,69 @@ errno_t test_string_holder_str(void) {
 
   return result;
 }
+
+errno_t test_int_queue(void) {
+  errno_t result = 0;
+  int last = 0;
+  int_vector_t* vec;
+
+  printf("Checking int queue behavior... ");
+
+  ERR_REGION_BEGIN() {
+    vec = int_vector_alloc();
+    ERR_REGION_NULL_CHECK(vec, result);
+    ERR_REGION_CMP_CHECK(int_vector_get_length(vec) != 0, result);
+
+    int_vector_push(vec, 1);
+    int_vector_push(vec, 2);
+    int_vector_push(vec, 3);
+
+    ERR_REGION_CMP_CHECK(int_vector_get_length(vec) != 3, result);
+
+    int_vector_shift_keep(vec, &last);
+    int_vector_shift(vec);
+
+    ERR_REGION_CMP_CHECK(last != 1, result);
+    ERR_REGION_CMP_CHECK(int_vector_get_length(vec) != 1, result);
+    ERR_REGION_CMP_CHECK(int_vector_get(vec, 0) != 3, result);
+  } ERR_REGION_END()
+
+  if (vec) int_vector_free(vec);
+
+  printf("%s\n", result ? "FAILED!" : "passed.");
+
+  return result;
+}
+
+errno_t test_double_queue(void) {
+  errno_t result = 0;
+  double last = 0;
+  double_vector_t* vec;
+
+  printf("Checking double queue behavior... ");
+
+  ERR_REGION_BEGIN() {
+    vec = double_vector_alloc();
+    ERR_REGION_NULL_CHECK(vec, result);
+    ERR_REGION_CMP_CHECK(double_vector_get_length(vec) != 0, result);
+
+    double_vector_push(vec, 3);
+    double_vector_push(vec, 2);
+    double_vector_push(vec, 1);
+
+    ERR_REGION_CMP_CHECK(double_vector_get_length(vec) != 3, result);
+
+    double_vector_shift_keep(vec, &last);
+    double_vector_shift(vec);
+
+    ERR_REGION_CMP_CHECK(last != 3, result);
+    ERR_REGION_CMP_CHECK(double_vector_get_length(vec) != 1, result);
+    ERR_REGION_CMP_CHECK(double_vector_get(vec, 0) != 1, result);
+  } ERR_REGION_END()
+
+  if (vec) double_vector_free(vec);
+
+  printf("%s\n", result ? "FAILED!" : "passed.");
+
+  return result;
+}

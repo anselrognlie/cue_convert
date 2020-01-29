@@ -165,3 +165,5 @@ errno_t value_vector_shift_keep(struct value_vector* self, char* out) {
   return value_vector_delete_at_keep(self, 0, out);
 }
 
+IMPLEMENT_POD_VALUE_VECTOR(int)
+IMPLEMENT_POD_VALUE_VECTOR(double)
