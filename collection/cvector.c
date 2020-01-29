@@ -49,6 +49,10 @@ size_t cvector_get_length(struct cvector* self) {
   return self->length;
 }
 
+void const* cvector_get_buffer(struct cvector* self) {
+  return self->array;
+}
+
 void const* cvector_get(struct cvector* self, size_t i) {
   return self->array[i];
 }

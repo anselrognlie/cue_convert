@@ -74,6 +74,10 @@ size_t string_vector_get_length(struct string_vector* self) {
   return cvector_get_length(&self->self);
 }
 
+char const* string_vector_get_buffer(struct string_vector* self) {
+  return (char const *)cvector_get_length(&self->self);
+}
+
 char const* string_vector_get(struct string_vector* self, size_t i) {
   return (char const *)cvector_get(&self->self, i);
 }

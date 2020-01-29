@@ -26,6 +26,8 @@ errno_t vtype##_uninit(struct vtype* self); \
 errno_t vtype##_free(struct vtype* self); \
 \
 size_t vtype##_get_length(struct vtype* self); \
+type const* vtype##_get_buffer(struct vtype* self); \
+\
 type const* vtype##_get(struct vtype* self, size_t i); \
 type const * vtype##_set(struct vtype* self, size_t i, type const*instance); \
 errno_t vtype##_delete_at(struct vtype* self, size_t i); \
