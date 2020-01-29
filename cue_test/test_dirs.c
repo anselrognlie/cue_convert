@@ -11,6 +11,7 @@
 #include "string_helpers.h"
 #include "mem_helpers.h"
 #include "err_helpers.h"
+#include "char_vector.h"
 
 const char s_test_dir[] = "..\\test_data\\test_dir";
 const char s_test_delete_dir[] = "..\\test_data\\ensure_dir";
@@ -75,6 +76,17 @@ static char const** s_path_enum_path_parts[] = {
   s_path_enum_paths_1,
   s_path_enum_paths_2,
   s_path_enum_paths_3,
+};
+
+static char const* s_parallel_dirs[] = {
+  "p:\\parallel_path\\dir01",
+  "p:\\parallel_path\\dir01\\file0101",
+  "p:\\parallel_path\\dir01\\file0102",
+  "p:\\parallel_path\\dir02",
+  "p:\\parallel_path\\dir02\\file0201",
+  "p:\\parallel_path\\dir02\\file0202",
+  "p:\\parallel_path\\file01",
+  "p:\\parallel_path\\file02",
 };
 
 //
@@ -156,79 +168,83 @@ static void cv_init_visitor(compare_visitor_t* self,
 
 typedef struct parallel_traverse_visitor {
   directory_traversal_handler_i handler_i;
-  string_vector_t *path_vector;
+  char_vector_t root_path;
+  short passed;
+  size_t line;
+  char const** result;
+  size_t result_len;
 } parallel_traverse_visitor_t;
 
+static short ptv_visit_exit(directory_traversal_handler_i* self_i, directory_traversal_handler_state_t const* state) {
+  parallel_traverse_visitor_t* self = (parallel_traverse_visitor_t*)self_i->self;
+  file_handle_i const* directory = state->directory;
+  directory_entry_i const* entry = state->entry;
+  string_vector_t* history = state->history;
+
+  short keep_traversing = 1;
+  char const* path = 0;
+  char const* root_path = 0;
+  char const* parallel_path = 0;
+
+  ERR_REGION_BEGIN() {
+    size_t i = self->line;
+    ERR_REGION_CMP_CHECK_CODE(i >= self->result_len, keep_traversing, 0);
+
+    path = join_strings(
+      string_vector_get_buffer(history),
+      string_vector_get_length(history),
+      "\\");
+    ERR_REGION_NULL_CHECK_CODE(path, keep_traversing, 0);
+
+    root_path = char_vector_get_str(&self->root_path);
+    ERR_REGION_NULL_CHECK_CODE(root_path, keep_traversing, 0);
+
+    char const* parts[] = { root_path, path };
+    parallel_path = join_strings(parts, 2, "\\");
+    ERR_REGION_NULL_CHECK_CODE(parallel_path, keep_traversing, 0);
+
+    ERR_REGION_CMP_CHECK_CODE(strcmp(self->result[i], parallel_path) != 0, keep_traversing, 0);
+  } ERR_REGION_END()
+
+  SAFE_FREE(parallel_path);
+  SAFE_FREE(root_path);
+  SAFE_FREE(path);
+
+  if (self->passed) self->passed = keep_traversing;
+  ++self->line;
+
+  return keep_traversing;
+}
+
 static short ptv_visit(directory_traversal_handler_i* self_i, directory_traversal_handler_state_t const* state) {
-  parallel_traverse_visitor_t* self = (parallel_traverse_visitor_t*)self_i->self;
-  file_handle_i const* directory = state->directory;
-  directory_entry_i const* entry = state->entry;
-
-  short keep_traversing = 1;
-
-  ERR_REGION_BEGIN() {
-    const char *pushed = string_vector_push(self->path_vector, entry->get_name(entry));
-    ERR_REGION_NULL_CHECK_CODE(pushed, keep_traversing, 0);
-
-    char const* parallel_path = join_strings(
-      string_vector_get_buffer(self->path_vector),
-      string_vector_get_length(self->path_vector),
-      "\\");
-
-    ERR_REGION_NULL_CHECK_CODE(parallel_path, keep_traversing, 0);
-
-    printf("%s\n", parallel_path);
-    SAFE_FREE(parallel_path);
-  } ERR_REGION_END()
-
-  return keep_traversing;
+  return ptv_visit_exit(self_i, state);
 }
 
-static short ptv_exit(directory_traversal_handler_i* self_i, directory_traversal_handler_state_t const* state) {
-  parallel_traverse_visitor_t* self = (parallel_traverse_visitor_t*)self_i->self;
-  file_handle_i const* directory = state->directory;
-  directory_entry_i const* entry = state->entry;
+static errno_t ptv_init_visitor(parallel_traverse_visitor_t* self,
+  char const *root_path,
+  char const **result,
+  size_t result_len) {
 
-  short keep_traversing = 1;
+  errno_t err = 0;
 
   ERR_REGION_BEGIN() {
-    errno_t result = string_vector_pop(self->path_vector);
-    ERR_REGION_ERROR_CHECK_CODE(result, keep_traversing, 0);
+    memset(self, 0, sizeof(*self));
+    self->handler_i.self = self;
+    self->handler_i.visit = ptv_visit;
+    self->passed = 1;
+    self->result = result;
+    self->result_len = result_len;
 
-    char const* parallel_path = join_strings(
-      string_vector_get_buffer(self->path_vector),
-      string_vector_get_length(self->path_vector),
-      "\\");
+    ERR_REGION_ERROR_CHECK(char_vector_init(&self->root_path), err);
+    ERR_REGION_NULL_CHECK(char_vector_set_str(&self->root_path, root_path), err);
 
-    ERR_REGION_NULL_CHECK_CODE(parallel_path, keep_traversing, 0);
-
-    printf("%s\n", parallel_path);
-    SAFE_FREE(parallel_path);
   } ERR_REGION_END()
 
-  return keep_traversing;
-}
-
-static errno_t ptv_init_visitor(parallel_traverse_visitor_t* self, char const *root_path) {
-  memset(self, 0, sizeof(*self));
-  self->handler_i.self = self;
-  self->handler_i.visit = ptv_visit;
-  self->handler_i.exit = ptv_exit;
-  self->path_vector = string_vector_alloc();
-  if (!self->path_vector) {
-    return -1;
-  }
-
-  if (!string_vector_push(self->path_vector, root_path)) {
-    string_vector_free(self->path_vector);
-    return -1;
-  }
-
-  return 0;
+  return err;
 }
 
 static errno_t ptv_uninit_visitor(parallel_traverse_visitor_t* self) {
-  return string_vector_free(self->path_vector);
+  return char_vector_uninit(&self->root_path);
 }
 
 //
@@ -384,10 +400,16 @@ errno_t test_enumerate_path(void) {
 errno_t test_parallel_traverse(void) {
   parallel_traverse_visitor_t visitor;
 
-  ptv_init_visitor(&visitor, s_parallel_dir);
+  printf("Checking parallel path enumeration... ");
+
+  size_t result_len = sizeof(s_parallel_dirs) / sizeof(*s_parallel_dirs);
+  ptv_init_visitor(&visitor, s_parallel_dir, s_parallel_dirs, result_len);
 
   traverse_dir_path(s_test_dir, &visitor.handler_i);
 
   ptv_uninit_visitor(&visitor);
-  return 0;
+
+  printf("%s\n", visitor.passed ? "passed." : "FAILED!");
+
+  return visitor.passed ? 0 : -1;
 }

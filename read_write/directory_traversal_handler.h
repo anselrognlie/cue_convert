@@ -2,12 +2,14 @@
 
 struct file_handle;
 struct directory_entry;
+struct string_vector;
 
 typedef struct directory_traversal_handler_state {
   struct file_handle* directory;
   struct directory_entry* entry;
   short first_entry;
   short last_entry;
+  struct string_vector* history;
 } directory_traversal_handler_state_t;
 
 typedef struct directory_traversal_handler {

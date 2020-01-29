@@ -5,6 +5,7 @@
 struct directory_traversal_handler;
 struct file_handle;
 struct directory_traversal_options;
+struct string_vector;
 
 typedef struct directory_traversal_options {
   short should_descend;
