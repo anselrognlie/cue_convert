@@ -7,11 +7,15 @@
 #include "directory_traversal.h"
 #include "directory_traversal_handler.h"
 #include "path.h"
+#include "string_vector.h"
+#include "string_helpers.h"
+#include "mem_helpers.h"
+#include "err_helpers.h"
 
 const char s_test_dir[] = "..\\test_data\\test_dir";
 const char s_test_delete_dir[] = "..\\test_data\\ensure_dir";
 const char s_test_ensure_dir[] = "..\\test_data\\ensure_dir\\a\\dir\\to\\ensure";
-const char s_parallel_dir[] = "some_path";
+const char s_parallel_dir[] = "p:\\parallel_path";
 
 //#define PRINT_ONLY
 
@@ -152,6 +156,7 @@ static void cv_init_visitor(compare_visitor_t* self,
 
 typedef struct parallel_traverse_visitor {
   directory_traversal_handler_i handler_i;
+  string_vector_t *path_vector;
 } parallel_traverse_visitor_t;
 
 static short ptv_visit(directory_traversal_handler_i* self_i, directory_traversal_handler_state_t const* state) {
@@ -159,14 +164,81 @@ static short ptv_visit(directory_traversal_handler_i* self_i, directory_traversa
   file_handle_i const* directory = state->directory;
   directory_entry_i const* entry = state->entry;
 
-  return 1;
+  short keep_traversing = 1;
+
+  ERR_REGION_BEGIN() {
+    if (!string_vector_push(self->path_vector, entry->get_name(entry))) {
+      keep_traversing = 0;
+      break;
+    }
+
+    char const* parallel_path = join_strings(
+      string_vector_get_buffer(self->path_vector),
+      string_vector_get_length(self->path_vector),
+      "\\");
+
+    if (! parallel_path) {
+      keep_traversing = 0;
+      break;
+    }
+
+    printf("%s\n", parallel_path);
+    SAFE_FREE(parallel_path);
+  } ERR_REGION_END()
+
+  return keep_traversing;
 }
 
-static void ptv_init_visitor(parallel_traverse_visitor_t* self) {
+static short ptv_exit(directory_traversal_handler_i* self_i, directory_traversal_handler_state_t const* state) {
+  parallel_traverse_visitor_t* self = (parallel_traverse_visitor_t*)self_i->self;
+  file_handle_i const* directory = state->directory;
+  directory_entry_i const* entry = state->entry;
 
+  short keep_traversing = 1;
+
+  do {
+    if (string_vector_pop(self->path_vector) != 0) {
+      keep_traversing = 0;
+      break;
+    }
+
+    char const* parallel_path = join_strings(
+      string_vector_get_buffer(self->path_vector),
+      string_vector_get_length(self->path_vector),
+      "\\");
+
+    if (!parallel_path) {
+      keep_traversing = 0;
+      break;
+    }
+
+    printf("%s\n", parallel_path);
+    SAFE_FREE(parallel_path);
+  } while (0);
+
+  return keep_traversing;
+}
+
+static errno_t ptv_init_visitor(parallel_traverse_visitor_t* self, char const *root_path) {
   memset(self, 0, sizeof(*self));
   self->handler_i.self = self;
   self->handler_i.visit = ptv_visit;
+  self->handler_i.exit = ptv_exit;
+  self->path_vector = string_vector_alloc();
+  if (!self->path_vector) {
+    return -1;
+  }
+
+  if (!string_vector_push(self->path_vector, root_path)) {
+    string_vector_free(self->path_vector);
+    return -1;
+  }
+
+  return 0;
+}
+
+static errno_t ptv_uninit_visitor(parallel_traverse_visitor_t* self) {
+  return string_vector_free(self->path_vector);
 }
 
 //
@@ -321,6 +393,11 @@ errno_t test_enumerate_path(void) {
 
 errno_t test_parallel_traverse(void) {
   parallel_traverse_visitor_t visitor;
-  ptv_init_visitor(&visitor);
+
+  ptv_init_visitor(&visitor, s_parallel_dir);
+
+  traverse_dir_path(s_test_dir, &visitor.handler_i);
+
+  ptv_uninit_visitor(&visitor);
   return 0;
 }

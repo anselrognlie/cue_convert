@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="err_helpers.h" />
     <ClInclude Include="file_helpers.h" />
     <ClInclude Include="format_helpers.h" />
     <ClInclude Include="mem_helpers.h" />

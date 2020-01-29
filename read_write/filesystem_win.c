@@ -9,12 +9,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <stddef.h>
 
 #include "mem_helpers.h"
 #include "string_helpers.h"
 #include "directory_traversal.h"
 #include "directory_traversal_handler.h"
 #include "path.h"
+#include "err_helpers.h"
 
 //#define PRINT_ONLY
 
@@ -98,73 +100,55 @@ static void fs_file_handle_init(fs_file_handle_t* self) {
   self->handle_i.get_path = fs_get_path;
 }
 
-typedef struct {
-  char *path_with_wildcard;
-  wchar_t *path_w;
-  HANDLE h;
-  char *path_duplicate;
-} open_dir_state_t;
-
-static void release_open_dir_state(open_dir_state_t* state) {
-  if (state) {
-    if (state->path_with_wildcard) free(state->path_with_wildcard);
-    if (state->path_w) free(state->path_w);
-    if (state->h) FindClose(state->h);
-    if (state->path_duplicate) free(state->path_duplicate);
-  }
-}
-
-#define OPEN_DIR_NULL_CHECK(arg) \
-  if (!(arg)) { \
-    release_open_dir_state(&state); \
-    return NULL; \
-  }
-
-#define OPEN_DIR_INVALID_CHECK(arg) \
-  if (INVALID_HANDLE_VALUE == (arg)) { \
-    release_open_dir_state(&state); \
-    return NULL; \
-  }
-
 file_handle_i* open_dir(char const* path) {
-  open_dir_state_t state;
+  char* path_with_wildcard = 0;
+  wchar_t* path_w = 0;
+  HANDLE h = INVALID_HANDLE_VALUE;
+  char* path_duplicate = 0;
   WIN32_FIND_DATA ffd;
+  fs_file_handle_t* result = NULL;
+  errno_t err = 0;
 
-  memset(&state, 0, sizeof(open_dir_state_t));
+  ERR_REGION_BEGIN() {
+    size_t path_len = strlen(path);
+    size_t path_wildcard_len = path_len + s_path_wildcard_len;
+    path_with_wildcard = malloc(path_wildcard_len + 1);
+    ERR_REGION_NULL_CHECK(path_with_wildcard, err);
 
-  size_t path_len = strlen(path);
-  size_t path_wildcard_len = path_len + s_path_wildcard_len;
-  state.path_with_wildcard = malloc(path_wildcard_len + 1);
-  OPEN_DIR_NULL_CHECK(state.path_with_wildcard);
+    strcpy_s(path_with_wildcard, path_wildcard_len + 1, path);
+    strcpy_s(path_with_wildcard + path_len, path_wildcard_len - path_len + 1, s_path_wildcard);
 
-  strcpy_s(state.path_with_wildcard, path_wildcard_len + 1, path);
-  strcpy_s(state.path_with_wildcard + path_len, path_wildcard_len - path_len + 1, s_path_wildcard);
+    path_w = widen_path(path_with_wildcard);
+    ERR_REGION_NULL_CHECK(path_w, err);
 
-  state.path_w = widen_path(state.path_with_wildcard);
-  OPEN_DIR_NULL_CHECK(state.path_w);
+    h = FindFirstFile(path_w, &ffd);
+    ERR_REGION_INVALID_CHECK(h, err);
 
-  state.h = FindFirstFile(state.path_w, &ffd);
-  OPEN_DIR_INVALID_CHECK(state.h);
+    path_duplicate = _strdup(path);
+    ERR_REGION_NULL_CHECK(path_duplicate, err);
 
-  state.path_duplicate = _strdup(path);
-  OPEN_DIR_NULL_CHECK(state.path_duplicate);
+    result = malloc(sizeof(fs_file_handle_t));
+    ERR_REGION_NULL_CHECK(result, err);
 
-  fs_file_handle_t* result = malloc(sizeof(fs_file_handle_t));
-  OPEN_DIR_NULL_CHECK(result);
+    fs_file_handle_init(result);
+    result->handle = h;
+    result->ffd = ffd;
+    result->eof = 0;
+    result->path = path_duplicate;
 
-  fs_file_handle_init(result);
-  result->handle = state.h;
-  result->ffd = ffd;
-  result->eof = 0;
-  result->path = state.path_duplicate;
+    // unset state values that shouldn't be cleaned up
+    h = INVALID_HANDLE_VALUE;
+    path_duplicate = NULL;
+  } ERR_REGION_END()
 
-  // unset state values that shouldn't be cleaned up
-  state.h = INVALID_HANDLE_VALUE;
-  state.path_duplicate = NULL;
+  if (path_with_wildcard) free(path_with_wildcard);
+  if (path_w) free(path_w);
+  if (h != INVALID_HANDLE_VALUE) FindClose(h);
+  if (path_duplicate) free(path_duplicate);
 
-  release_open_dir_state(&state);
+  if (result) return &result->handle_i;
 
-  return &result->handle_i;
+  return NULL;
 }
 
 void fs_close_dir(file_handle_i* handle) {

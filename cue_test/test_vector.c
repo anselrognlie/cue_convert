@@ -7,6 +7,7 @@
 #include "string_vector.h"
 #include "string_helpers.h"
 #include "mem_helpers.h"
+#include "err_helpers.h"
 
 errno_t test_string_stack(void) {
   errno_t result = 0;
@@ -15,49 +16,24 @@ errno_t test_string_stack(void) {
 
   printf("Checking vector stack behavior... ");
 
-  do {
+  ERR_REGION_BEGIN() {
     vec = string_vector_alloc();
-    if (!vec) {
-      result = -1;
-      break;
-    }
-
-    //printf("len:%d\n", string_vector_get_length(&vec));
-    if (string_vector_get_length(vec) != 0) {
-      result = -1;
-      break;
-    }
+    ERR_REGION_NULL_CHECK(vec, result);
+    ERR_REGION_CMP_CHECK(string_vector_get_length(vec) != 0, result);
 
     string_vector_push(vec, "str1");
     string_vector_push(vec, "str2");
     string_vector_push(vec, "str3");
 
-    //printf("len:%d\n", string_vector_get_length(&vec));
-    if (string_vector_get_length(vec) != 3) {
-      result = -1;
-      break;
-    }
+    ERR_REGION_CMP_CHECK(string_vector_get_length(vec) != 3, result);
 
     string_vector_pop(vec);
     string_vector_pop_keep(vec, &last);
 
-    //printf("last:%s\n", last);
-    if (strcmp(last, "str2") != 0) {
-      result = -1;
-      break;
-    }
-
-    //printf("len:%d\n", string_vector_get_length(&vec));
-    if (string_vector_get_length(vec) != 1) {
-      result = -1;
-      break;
-    }
-
-    if (strcmp(string_vector_get(vec, 0), "str1") != 0) {
-      result = -1;
-      break;
-    }
-  } while (0);
+    ERR_REGION_CMP_CHECK(strcmp(last, "str2") != 0, result);
+    ERR_REGION_CMP_CHECK(string_vector_get_length(vec) != 1, result);
+    ERR_REGION_CMP_CHECK(strcmp(string_vector_get(vec, 0), "str1") != 0, result);
+  } ERR_REGION_END()
 
   if (last) free(last);
   if (vec) string_vector_free(vec);
@@ -74,49 +50,25 @@ errno_t test_string_unstack(void) {
 
   printf("Checking vector unstack behavior... ");
 
-  do {
-    vec = string_vector_alloc();
-    if (!vec) {
-      result = -1;
-      break;
-    }
+  ERR_REGION_BEGIN() {
 
-    //printf("len:%d\n", string_vector_get_length(&vec));
-    if (string_vector_get_length(vec) != 0) {
-      result = -1;
-      break;
-    }
+    vec = string_vector_alloc();
+    ERR_REGION_NULL_CHECK(vec, result);
+    ERR_REGION_CMP_CHECK(string_vector_get_length(vec) != 0, result);
 
     string_vector_unshift(vec, "str1");
     string_vector_unshift(vec, "str2");
     string_vector_unshift(vec, "str3");
 
-    //printf("len:%d\n", string_vector_get_length(&vec));
-    if (string_vector_get_length(vec) != 3) {
-      result = -1;
-      break;
-    }
+    ERR_REGION_CMP_CHECK(string_vector_get_length(vec) != 3, result);
 
     string_vector_shift(vec);
     string_vector_shift_keep(vec, &last);
 
-    //printf("last:%s\n", last);
-    if (strcmp(last, "str2") != 0) {
-      result = -1;
-      break;
-    }
-
-    //printf("len:%d\n", string_vector_get_length(&vec));
-    if (string_vector_get_length(vec) != 1) {
-      result = -1;
-      break;
-    }
-
-    if (strcmp(string_vector_get(vec, 0), "str1") != 0) {
-      result = -1;
-      break;
-    }
-  } while (0);
+    ERR_REGION_CMP_CHECK(strcmp(last, "str2") != 0, result);
+    ERR_REGION_CMP_CHECK(string_vector_get_length(vec) != 1, result);
+    ERR_REGION_CMP_CHECK(strcmp(string_vector_get(vec, 0), "str1") != 0, result);
+  } ERR_REGION_END()
 
   if (last) free(last);
   if (vec) string_vector_free(vec);
@@ -133,49 +85,24 @@ errno_t test_string_queue(void) {
 
   printf("Checking vector queue behavior... ");
 
-  do {
+  ERR_REGION_BEGIN() {
     vec = string_vector_alloc();
-    if (!vec) {
-      result = -1;
-      break;
-    }
-
-    //printf("len:%d\n", string_vector_get_length(&vec));
-    if (string_vector_get_length(vec) != 0) {
-      result = -1;
-      break;
-    }
+    ERR_REGION_NULL_CHECK(vec, result);
+    ERR_REGION_CMP_CHECK(string_vector_get_length(vec) != 0, result);
 
     string_vector_push(vec, "str1");
     string_vector_push(vec, "str2");
     string_vector_push(vec, "str3");
 
-    //printf("len:%d\n", string_vector_get_length(&vec));
-    if (string_vector_get_length(vec) != 3) {
-      result = -1;
-      break;
-    }
+    ERR_REGION_CMP_CHECK(string_vector_get_length(vec) != 3, result);
 
     string_vector_shift_keep(vec, &last);
     string_vector_shift(vec);
 
-    //printf("last:%s\n", last);
-    if (strcmp(last, "str1") != 0) {
-      result = -1;
-      break;
-    }
-
-    //printf("len:%d\n", string_vector_get_length(&vec));
-    if (string_vector_get_length(vec) != 1) {
-      result = -1;
-      break;
-    }
-
-    if (strcmp(string_vector_get(vec, 0), "str3") != 0) {
-      result = -1;
-      break;
-    }
-  } while (0);
+    ERR_REGION_CMP_CHECK(strcmp(last, "str1") != 0, result);
+    ERR_REGION_CMP_CHECK(string_vector_get_length(vec) != 1, result);
+    ERR_REGION_CMP_CHECK(strcmp(string_vector_get(vec, 0), "str3") != 0, result);
+  } ERR_REGION_END()
 
   if (last) free(last);
   if (vec) string_vector_free(vec);
@@ -192,12 +119,10 @@ errno_t test_string_vector_join(void) {
 
   printf("Checking vector join behavior... ");
 
-  do {
+  ERR_REGION_BEGIN() {
     vec = string_vector_alloc();
-    if (!vec) {
-      result = -1;
-      break;
-    }
+    ERR_REGION_NULL_CHECK(vec, result);
+    ERR_REGION_CMP_CHECK(string_vector_get_length(vec) != 0, result);
 
     string_vector_push(vec, "str1");
     string_vector_push(vec, "str2");
@@ -207,16 +132,10 @@ errno_t test_string_vector_join(void) {
       string_vector_get_buffer(vec), 
       string_vector_get_length(vec),
       "//");
-    if (!joined) {
-      result = -1;
-      break;
-    }
+    ERR_REGION_NULL_CHECK(joined, result);
 
-    if (strcmp(joined, "str1//str2//str3") != 0) {
-      result = -1;
-      break;
-    }
-  } while (0);
+    ERR_REGION_CMP_CHECK(strcmp(joined, "str1//str2//str3") != 0, result);
+  } ERR_REGION_END()
 
   if (joined) SAFE_FREE(joined);
   if (vec) string_vector_free(vec);
