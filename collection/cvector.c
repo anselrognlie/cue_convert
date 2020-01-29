@@ -3,11 +3,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct cvector* cvector_alloc(struct cvector_params* ops) {
-  cvector_t *self = malloc(sizeof(*self));
+struct object_vector* object_vector_alloc(struct object_vector_params* ops) {
+  object_vector_t *self = malloc(sizeof(*self));
   if (! self) return NULL;
 
-  errno_t result = cvector_init(self, ops);
+  errno_t result = object_vector_init(self, ops);
   if (result) {
     free(self);
     self = NULL;
@@ -16,7 +16,7 @@ struct cvector* cvector_alloc(struct cvector_params* ops) {
   return self;
 }
 
-errno_t cvector_init(struct cvector* self, struct cvector_params* ops) {
+errno_t object_vector_init(struct object_vector* self, struct object_vector_params* ops) {
   memset(self, 0, sizeof(*self));
   self->ops = *ops;
 
@@ -26,7 +26,7 @@ errno_t cvector_init(struct cvector* self, struct cvector_params* ops) {
   return 0;
 }
 
-errno_t cvector_uninit(struct cvector* self) {
+errno_t object_vector_uninit(struct object_vector* self) {
   // release each thing we own
   for (size_t i = 0; i < self->length; ++i) {
     self->ops.free(self->array[i]);
@@ -37,27 +37,27 @@ errno_t cvector_uninit(struct cvector* self) {
   return 0;
 }
 
-errno_t cvector_free(struct cvector* self) {
-  errno_t result = cvector_uninit(self);
+errno_t object_vector_free(struct object_vector* self) {
+  errno_t result = object_vector_uninit(self);
   if (result) return result;
 
   free(self);
   return 0;
 }
 
-size_t cvector_get_length(struct cvector* self) {
+size_t object_vector_get_length(struct object_vector* self) {
   return self->length;
 }
 
-void const** cvector_get_buffer(struct cvector* self) {
+void const** object_vector_get_buffer(struct object_vector* self) {
   return self->array;
 }
 
-void const* cvector_get(struct cvector* self, size_t i) {
+void const* object_vector_get(struct object_vector* self, size_t i) {
   return self->array[i];
 }
 
-static void * copy_in(struct cvector* self, size_t i, void const* instance) {
+static void * copy_in(struct object_vector* self, size_t i, void const* instance) {
   void* owned = self->ops.alloc(self->ops.type_size);
   if (!owned) return NULL;
 
@@ -70,7 +70,7 @@ static void * copy_in(struct cvector* self, size_t i, void const* instance) {
   return copied;
 }
 
-void const* cvector_set(struct cvector* self, size_t i, void const* instance) {
+void const* object_vector_set(struct object_vector* self, size_t i, void const* instance) {
   void **current_i = self->array + i;
   if (*current_i == instance) return instance;
 
@@ -86,11 +86,11 @@ void const* cvector_set(struct cvector* self, size_t i, void const* instance) {
   return copied;
 }
 
-errno_t cvector_delete_at(struct cvector* self, size_t i) {
-  return cvector_delete_at_keep(self, i, NULL);
+errno_t object_vector_delete_at(struct object_vector* self, size_t i) {
+  return object_vector_delete_at_keep(self, i, NULL);
 }
 
-errno_t cvector_delete_at_keep(struct cvector* self, size_t i, void** out) {
+errno_t object_vector_delete_at_keep(struct object_vector* self, size_t i, void** out) {
   size_t new_len = self->length - 1;
 
   void** new_array = malloc(new_len * sizeof(void*));
@@ -119,7 +119,7 @@ errno_t cvector_delete_at_keep(struct cvector* self, size_t i, void** out) {
   return 0;
 }
 
-void const* cvector_insert_at(struct cvector* self, size_t i, void const* instance) {
+void const* object_vector_insert_at(struct object_vector* self, size_t i, void const* instance) {
   size_t new_len = self->length + 1;
 
   void** new_array = malloc(new_len * sizeof(void*));
@@ -148,27 +148,27 @@ void const* cvector_insert_at(struct cvector* self, size_t i, void const* instan
   return copied;
 }
 
-void const* cvector_push(struct cvector* self, void const* instance) {
-  return cvector_insert_at(self, self->length, instance);
+void const* object_vector_push(struct object_vector* self, void const* instance) {
+  return object_vector_insert_at(self, self->length, instance);
 }
 
-errno_t cvector_pop(struct cvector* self) {
-  return cvector_pop_keep(self, NULL);
+errno_t object_vector_pop(struct object_vector* self) {
+  return object_vector_pop_keep(self, NULL);
 }
 
-errno_t cvector_pop_keep(struct cvector* self, void** out) {
-  return cvector_delete_at_keep(self, self->length - 1, out);
+errno_t object_vector_pop_keep(struct object_vector* self, void** out) {
+  return object_vector_delete_at_keep(self, self->length - 1, out);
 }
 
-void const* cvector_unshift(struct cvector* self, void const* instance) {
-  return cvector_insert_at(self, 0, instance);
+void const* object_vector_unshift(struct object_vector* self, void const* instance) {
+  return object_vector_insert_at(self, 0, instance);
 }
 
-errno_t cvector_shift(struct cvector* self) {
-  return cvector_shift_keep(self, NULL);
+errno_t object_vector_shift(struct object_vector* self) {
+  return object_vector_shift_keep(self, NULL);
 }
 
-errno_t cvector_shift_keep(struct cvector* self, void** out) {
-  return cvector_delete_at_keep(self, 0, out);
+errno_t object_vector_shift_keep(struct object_vector* self, void** out) {
+  return object_vector_delete_at_keep(self, 0, out);
 }
 

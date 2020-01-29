@@ -15,18 +15,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="cvector.h">
+    <ClInclude Include="string_vector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="string_vector.h">
+    <ClInclude Include="cvector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="cvector.c">
+    <ClCompile Include="string_vector.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="string_vector.c">
+    <ClCompile Include="cvector.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
