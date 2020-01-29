@@ -34,6 +34,7 @@ int main(int argc, char const* argv[]) {
   result = test_string_stack() || result;
   result = test_string_unstack() || result;
   result = test_string_queue() || result;
+  result = test_string_vector_join() || result;
   result = test_parallel_traverse() || result;
 
   printf("%s\n", result ? "FAILURE!" : "All passed.");

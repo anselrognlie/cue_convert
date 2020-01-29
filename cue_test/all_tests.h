@@ -14,5 +14,6 @@ errno_t test_ensure_path(void);
 errno_t test_string_stack(void);
 errno_t test_string_unstack(void);
 errno_t test_string_queue(void);
+errno_t test_string_vector_join(void);
 errno_t test_parallel_traverse(void);
 
