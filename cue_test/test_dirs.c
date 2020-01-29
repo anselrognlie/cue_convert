@@ -167,20 +167,15 @@ static short ptv_visit(directory_traversal_handler_i* self_i, directory_traversa
   short keep_traversing = 1;
 
   ERR_REGION_BEGIN() {
-    if (!string_vector_push(self->path_vector, entry->get_name(entry))) {
-      keep_traversing = 0;
-      break;
-    }
+    const char *pushed = string_vector_push(self->path_vector, entry->get_name(entry));
+    ERR_REGION_NULL_CHECK_CODE(pushed, keep_traversing, 0);
 
     char const* parallel_path = join_strings(
       string_vector_get_buffer(self->path_vector),
       string_vector_get_length(self->path_vector),
       "\\");
 
-    if (! parallel_path) {
-      keep_traversing = 0;
-      break;
-    }
+    ERR_REGION_NULL_CHECK_CODE(parallel_path, keep_traversing, 0);
 
     printf("%s\n", parallel_path);
     SAFE_FREE(parallel_path);
@@ -196,25 +191,20 @@ static short ptv_exit(directory_traversal_handler_i* self_i, directory_traversal
 
   short keep_traversing = 1;
 
-  do {
-    if (string_vector_pop(self->path_vector) != 0) {
-      keep_traversing = 0;
-      break;
-    }
+  ERR_REGION_BEGIN() {
+    errno_t result = string_vector_pop(self->path_vector);
+    ERR_REGION_ERROR_CHECK_CODE(result, keep_traversing, 0);
 
     char const* parallel_path = join_strings(
       string_vector_get_buffer(self->path_vector),
       string_vector_get_length(self->path_vector),
       "\\");
 
-    if (!parallel_path) {
-      keep_traversing = 0;
-      break;
-    }
+    ERR_REGION_NULL_CHECK_CODE(parallel_path, keep_traversing, 0);
 
     printf("%s\n", parallel_path);
     SAFE_FREE(parallel_path);
-  } while (0);
+  } ERR_REGION_END()
 
   return keep_traversing;
 }
