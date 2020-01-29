@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cvector.h"
+#include "object_vector.h"
 
 extern struct object_vector_params string_vector_ops;
 
