@@ -14,9 +14,10 @@ static const short s_test_file_lines[] = { 0, 1, 5, 5 };
 
 static const size_t s_test_file_num = sizeof(s_test_files) / sizeof(s_test_files[0]);
 
-void test_getline(void) {
+errno_t test_getline(void) {
   size_t bytes = 0;
 
+  errno_t result = 0;
   for (size_t i = 0; i < s_test_file_num; ++i) {
     char const *filename = s_test_files[i];
     FILE *in_file;
@@ -41,12 +42,16 @@ void test_getline(void) {
       }
       else {
         printf("FAILED!\n");
+        result = -1;
       }
 
       fclose(in_file);
     }
     else {
       printf("FAILED TO OPEN!\n");
+      result = -1;
     }
   }
+
+  return result;
 }

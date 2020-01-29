@@ -15,30 +15,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="all_tests.h">
+    <ClInclude Include="cvector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="test_helpers.h">
+    <ClInclude Include="string_vector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="test_cue.c">
+    <ClCompile Include="cvector.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test_getline.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="main.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test_helpers.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test_dirs.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test_vector.c">
+    <ClCompile Include="string_vector.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,13 +1,18 @@
 #pragma once
 
-void test_string_join(void);
-void test_getline(void);
-void test_cue(void);
-void test_cue_copy(void);
-void test_cue_transform(void);
-void test_list_dir(void);
-void test_traverse_dirs(void);
-void test_enumerate_path(void);
-void test_ensure_path(void);
-void test_parallel_traverse(void);
+#include <stddef.h>
+
+errno_t test_string_join(void);
+errno_t test_getline(void);
+errno_t test_cue(void);
+errno_t test_cue_copy(void);
+errno_t test_cue_transform(void);
+errno_t test_list_dir(void);
+errno_t test_traverse_dirs(void);
+errno_t test_enumerate_path(void);
+errno_t test_ensure_path(void);
+errno_t test_string_stack(void);
+errno_t test_string_unstack(void);
+errno_t test_string_queue(void);
+errno_t test_parallel_traverse(void);
 

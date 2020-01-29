@@ -60,7 +60,7 @@ static const int s_transformed_sheet_num_lines = sizeof(s_transformed_sheet) / s
 
 #define GET_SIZE(arr) (arr),sizeof((arr))/sizeof(*(arr))
 
-void test_cue(void) {
+errno_t test_cue(void) {
 
   printf("Checking cue output... ");
 
@@ -70,25 +70,29 @@ void test_cue(void) {
 
   if (!sheet) {
     printf("FAILED!\n");
-    return;
+    return -1;
   }
 
   array_line_writer_t writer;
   array_line_writer_init(&writer);
   cue_sheet_write(sheet, &writer.line_writer);
 
+  errno_t result = 0;
   if (compare_string_arrays(s_cue_sheet, s_cue_sheet_num_lines, writer.lines, writer.num_lines)) {
     printf("passed.\n");
   }
   else {
     printf("FAILED!\n");
+    result = -1;
   }
 
   array_line_writer_uninit(&writer);
   cue_sheet_free(sheet);
+
+  return result;
 }
 
-void test_cue_copy(void) {
+errno_t test_cue_copy(void) {
 
   printf("Checking cue copy... ");
 
@@ -98,33 +102,37 @@ void test_cue_copy(void) {
 
   if (!sheet) {
     printf("FAILED!\n");
-    return;
+    return -1;
   }
 
   cue_sheet_t *copy = cue_sheet_alloc_copy(sheet);
   if (!copy) {
     printf("FAILED!\n");
     cue_sheet_free(sheet);
-    return;
+    return -1;
   }
 
   array_line_writer_t writer;
   array_line_writer_init(&writer);
   cue_sheet_write(copy, &writer.line_writer);
 
+  errno_t result = 0;
   if (compare_string_arrays(s_cue_sheet, s_cue_sheet_num_lines, writer.lines, writer.num_lines)) {
     printf("passed.\n");
   }
   else {
     printf("FAILED!\n");
+    result = -1;
   }
 
   array_line_writer_uninit(&writer);
   cue_sheet_free(copy);
   cue_sheet_free(sheet);
+
+  return result;
 }
 
-void test_cue_transform(void) {
+errno_t test_cue_transform(void) {
 
   printf("Checking cue transform... ");
 
@@ -134,7 +142,7 @@ void test_cue_transform(void) {
 
   if (!sheet) {
     printf("FAILED!\n");
-    return;
+    return -1;
   }
 
   cue_transform_audio_options_t options;
@@ -143,18 +151,20 @@ void test_cue_transform(void) {
   if (!transformed) {
     printf("FAILED!\n");
     cue_sheet_free(sheet);
-    return;
+    return -1;
   }
 
   array_line_writer_t writer;
   array_line_writer_init(&writer);
   cue_sheet_write(transformed, &writer.line_writer);
 
+  errno_t result = 0;
   if (compare_string_arrays(s_transformed_sheet, s_transformed_sheet_num_lines, writer.lines, writer.num_lines)) {
     printf("passed.\n");
   }
   else {
     printf("FAILED!\n");
+    result = -1;
   }
 
   //dump_string_array(writer.lines, writer.num_lines);
@@ -162,5 +172,7 @@ void test_cue_transform(void) {
   array_line_writer_uninit(&writer);
   cue_sheet_free(transformed);
   cue_sheet_free(sheet);
+
+  return result;
 }
 

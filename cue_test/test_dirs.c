@@ -180,7 +180,7 @@ void test_traverse_dirs_print(void) {
   traverse_dir_path(s_test_dir, &visitor.handler_i);
 }
 
-void test_traverse_dirs(void) {
+errno_t test_traverse_dirs(void) {
 #ifndef PRINT_ONLY
   compare_visitor_t visitor;
   cv_init_visitor(&visitor, s_test_traverse_result, s_test_traverse_result_len);
@@ -192,6 +192,8 @@ void test_traverse_dirs(void) {
   if (visitor.line != s_test_traverse_result_len) visitor.passed = 0;
 
   printf("%s\n", visitor.passed ? "passed." : "FAILED!");
+
+  return !visitor.passed;
 #else
   test_traverse_dirs_print();
 #endif
@@ -207,7 +209,7 @@ void test_list_dir_print(void) {
   traverse_dir_path_opts(s_test_dir, &opts, &visitor.handler_i);
 }
 
-void test_list_dir(void) {
+errno_t test_list_dir(void) {
 #ifndef PRINT_ONLY
   compare_visitor_t visitor;
   cv_init_visitor(&visitor, s_test_list_dir_result, s_test_list_dir_result_len);
@@ -222,6 +224,8 @@ void test_list_dir(void) {
   if (visitor.line != s_test_list_dir_result_len) visitor.passed = 0;
 
   printf("%s\n", visitor.passed ? "passed." : "FAILED!");
+
+  return ! visitor.passed;
 #else
   test_list_dir_print();
 #endif
@@ -237,7 +241,7 @@ static void print_path_enumeration(char const* path) {
   i->dispose(i);
 }
 
-void test_ensure_path(void) {
+errno_t test_ensure_path(void) {
   compare_visitor_t visitor;
   cv_init_visitor(&visitor, s_test_ensure_result, s_test_ensure_result_len);
 
@@ -249,7 +253,7 @@ void test_ensure_path(void) {
 
   if (file_exists(s_test_delete_dir)) {
     printf("%s\n", "FAILED!");
-    return;
+    return -1;
   }
 
   ensure_dir(s_test_ensure_dir);
@@ -260,10 +264,12 @@ void test_ensure_path(void) {
   delete_dir(s_test_delete_dir);
   if (file_exists(s_test_delete_dir)) {
     printf("%s\n", "FAILED!");
-    return;
+    return -1;
   }
 
   printf("%s\n", visitor.passed ? "passed." : "FAILED!");
+
+  return visitor.passed ? 0 : -1;
 }
 
 static short check_path_enumeration(char const* path, char const* parts[]) {
@@ -295,24 +301,26 @@ static short check_path_enumeration(char const* path, char const* parts[]) {
   return passed;
 }
 
-void test_enumerate_path(void) {
-  short passed = 1;
+errno_t test_enumerate_path(void) {
+  errno_t result = 0;
   size_t num_paths = sizeof(s_path_enum_paths) / sizeof(*s_path_enum_paths);
 
   printf("Checking path enumeration... ");
 
   for (size_t i = 0; i < num_paths; ++i) {
     if (!check_path_enumeration(s_path_enum_paths[i], s_path_enum_path_parts[i])) {
-      passed = 0;
+      result = -1;
       break;
     }
   }
 
-  printf("%s\n", passed ? "passed." : "FAILED!");
+  printf("%s\n", result ? "FAILED!" : "passed.");
+
+  return result;
 }
 
-void test_parallel_traverse(void) {
+errno_t test_parallel_traverse(void) {
   parallel_traverse_visitor_t visitor;
   ptv_init_visitor(&visitor);
-
+  return 0;
 }

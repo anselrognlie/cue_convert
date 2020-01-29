@@ -30,22 +30,23 @@ static char const *strings[] = {
 static const size_t s_strings_len = sizeof(strings) / sizeof(*strings);
 static char const *s_joined_string = "join..these..strings..together";
 
-void test_string_join(void) {
+errno_t test_string_join(void) {
   const size_t joined_len = strlen(s_joined_string);
 
-  printf("testing string join... ");
+  printf("Checking string join... ");
   char const *joined = join_strings(strings, s_strings_len, "..");
 
-  short success = 0;
+  errno_t result = -1;
   if (joined) {
-    success = 1;
+    result = 0;
     //printf("[%s] ", joined);
 
-    if (strlen(joined) != joined_len) success = 0;
-    if (!success || strncmp(joined, s_joined_string, joined_len) != 0) success = 0;
+    if (strlen(joined) != joined_len) result = -1;
+    if (result || strncmp(joined, s_joined_string, joined_len) != 0) result = -1;
 
     SAFE_FREE(joined);
   }
 
-  printf("%s\n", success ? "passed." : "FAILED!");
+  printf("%s\n", result ? "FAILED!" : "passed.");
+  return result;
 }
