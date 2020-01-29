@@ -19,12 +19,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="cvector.h" />
+    <ClInclude Include="char_vector.h" />
+    <ClInclude Include="object_vector.h" />
     <ClInclude Include="string_vector.h" />
+    <ClInclude Include="value_vector.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="cvector.c" />
+    <ClCompile Include="char_vector.c" />
+    <ClCompile Include="object_vector.c" />
     <ClCompile Include="string_vector.c" />
+    <ClCompile Include="value_vector.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

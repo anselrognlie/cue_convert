@@ -8,6 +8,7 @@
 #include "string_helpers.h"
 #include "mem_helpers.h"
 #include "err_helpers.h"
+#include "char_vector.h"
 
 errno_t test_string_stack(void) {
   errno_t result = 0;
@@ -139,6 +140,64 @@ errno_t test_string_vector_join(void) {
 
   if (joined) SAFE_FREE(joined);
   if (vec) string_vector_free(vec);
+
+  printf("%s\n", result ? "FAILED!" : "passed.");
+
+  return result;
+}
+
+errno_t test_string_holder_char(void) {
+  errno_t result = 0;
+  string_t *string = 0;
+  char const *cstr = 0;
+
+  printf("Checking string holder char behavior... ");
+
+  ERR_REGION_BEGIN() {
+    string = char_vector_alloc();
+    ERR_REGION_NULL_CHECK(string, result);
+    ERR_REGION_CMP_CHECK(char_vector_get_length(string) != 0, result);
+
+    char_vector_push(string, 'a');
+    char_vector_push(string, 'b');
+    char_vector_push(string, 'c');
+    ERR_REGION_CMP_CHECK(char_vector_get_length(string) != 3, result);
+
+    cstr = char_vector_get_str(string);
+    ERR_REGION_NULL_CHECK(cstr, result);
+
+    ERR_REGION_CMP_CHECK(strcmp(cstr, "abc") != 0, result);
+  } ERR_REGION_END()
+
+  SAFE_FREE(cstr);
+  if (string) char_vector_free(string);
+
+  printf("%s\n", result ? "FAILED!" : "passed.");
+
+  return result;
+}
+
+errno_t test_string_holder_str(void) {
+  errno_t result = 0;
+  string_t* string = 0;
+  char cstr[4] = {0};
+
+  printf("Checking string holder str behavior... ");
+
+  ERR_REGION_BEGIN() {
+    string = char_vector_alloc();
+    ERR_REGION_NULL_CHECK(string, result);
+    ERR_REGION_CMP_CHECK(char_vector_get_length(string) != 0, result);
+
+    char_vector_set_str(string, "xyz");
+    ERR_REGION_CMP_CHECK(char_vector_get_length(string) != 3, result);
+
+    char_vector_get_str_buf(string, cstr, sizeof(cstr));
+
+    ERR_REGION_CMP_CHECK(strcmp(cstr, "xyz") != 0, result);
+  } ERR_REGION_END()
+
+  if (string) char_vector_free(string);
 
   printf("%s\n", result ? "FAILED!" : "passed.");
 
