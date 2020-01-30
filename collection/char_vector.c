@@ -18,7 +18,7 @@ char const* char_vector_set_str(struct char_vector* self, char const* instance) 
   return buf;
 }
 
-char const* char_vector_get_str(struct char_vector* self) {
+char const* char_vector_get_str(struct char_vector const* self) {
   size_t str_len = value_vector_get_length(&self->self);
   char *buf = malloc(str_len + 1);
   if (! buf) return NULL;
@@ -28,7 +28,7 @@ char const* char_vector_get_str(struct char_vector* self) {
   return buf;
 }
 
-void char_vector_get_str_buf(struct char_vector* self, char* buf, size_t buf_len) {
+void char_vector_get_str_buf(struct char_vector const* self, char* buf, size_t buf_len) {
   // ensure the buffer is large enough (including the null byte)
   size_t str_len = value_vector_get_length(&self->self);
   if (buf_len < str_len + 1) return;
@@ -36,3 +36,4 @@ void char_vector_get_str_buf(struct char_vector* self, char* buf, size_t buf_len
   memmove_s(buf, buf_len, value_vector_get_buffer(&self->self), str_len);
   buf[str_len] = 0;
 }
+

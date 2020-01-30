@@ -13,10 +13,10 @@
 #include "err_helpers.h"
 #include "char_vector.h"
 
-const char s_test_dir[] = "..\\test_data\\test_dir";
-const char s_test_delete_dir[] = "..\\test_data\\ensure_dir";
-const char s_test_ensure_dir[] = "..\\test_data\\ensure_dir\\a\\dir\\to\\ensure";
-const char s_parallel_dir[] = "p:\\parallel_path";
+static const char s_test_dir[] = "..\\test_data\\test_dir";
+static const char s_test_delete_dir[] = "..\\test_data\\ensure_dir";
+static const char s_test_ensure_dir[] = "..\\test_data\\ensure_dir\\a\\dir\\to\\ensure";
+static const char s_parallel_dir[] = "p:\\parallel_path";
 
 //#define PRINT_ONLY
 

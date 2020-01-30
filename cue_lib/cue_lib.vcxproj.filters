@@ -24,6 +24,12 @@
     <ClInclude Include="cue_transform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cue_traverse.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cue_traverse_record.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cue_file.c">
@@ -33,6 +39,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="cue_transform.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cue_traverse.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cue_traverse_record.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

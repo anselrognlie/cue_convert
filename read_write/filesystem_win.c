@@ -20,9 +20,10 @@
 
 //#define PRINT_ONLY
 
+char const* k_path_separator = "\\";
+
 static char const s_path_wildcard[] = "\\*";
 static const size_t s_path_wildcard_len = sizeof(s_path_wildcard) - 1;
-static char const s_path_separator[] = "\\";
 
 typedef struct fs_file_handle {
   file_handle_i handle_i;
@@ -184,7 +185,7 @@ directory_entry_i* fs_next_dir_entry(file_handle_i* handle) {
 
 static char const* join_path(char const* base, char const* path) {
   char const *strings[] = { base, path };
-  return join_strings(strings, 2, s_path_separator);
+  return join_strings(strings, 2, k_path_separator);
 }
 
 static file_handle_i* fs_open_directory(file_handle_i const* handle, char const* path) {

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct value_vector* value_vector_alloc(struct value_vector_params* ops) {
+struct value_vector* value_vector_alloc(struct value_vector_params const* ops) {
   value_vector_t* self = malloc(sizeof(*self));
   if (!self) return NULL;
 
@@ -16,7 +16,28 @@ struct value_vector* value_vector_alloc(struct value_vector_params* ops) {
   return self;
 }
 
-errno_t value_vector_init(struct value_vector* self, struct value_vector_params* ops) {
+struct value_vector* value_vector_alloc_copy(value_vector_t const* from) {
+  value_vector_t* self = 0;
+  errno_t err = 0;
+  char const *copy_result = 0;
+
+  ERR_REGION_BEGIN() {
+    self = value_vector_alloc(&from->ops);
+    ERR_REGION_NULL_CHECK(self, err);
+
+    copy_result = value_vector_copy_from(self, from);
+    ERR_REGION_NULL_CHECK(copy_result, err);
+
+    return self;
+
+  } ERR_REGION_END()
+
+  value_vector_free(self);
+
+  return NULL;
+}
+
+errno_t value_vector_init(struct value_vector* self, struct value_vector_params const* ops) {
   memset(self, 0, sizeof(*self));
   self->ops = *ops;
 
@@ -56,15 +77,15 @@ char const *value_vector_resize(value_vector_t* self, size_t size) {
   return new_array;
 }
 
-size_t value_vector_get_length(struct value_vector* self) {
+size_t value_vector_get_length(struct value_vector const* self) {
   return self->length;
 }
 
-char const* value_vector_get_buffer(struct value_vector* self) {
+char const* value_vector_get_buffer(struct value_vector const* self) {
   return self->array;
 }
 
-char const* value_vector_get(struct value_vector* self, size_t i) {
+char const* value_vector_get(struct value_vector const* self, size_t i) {
   return self->array + (i * self->ops.type_size);
 }
 
@@ -163,6 +184,30 @@ errno_t value_vector_shift(struct value_vector* self) {
 
 errno_t value_vector_shift_keep(struct value_vector* self, char* out) {
   return value_vector_delete_at_keep(self, 0, out);
+}
+
+char const* value_vector_copy_from(struct value_vector* self, struct value_vector const* from) {
+  size_t len = from->length;
+  char* array = from->array;
+  char* old_array = self->array;
+  char * buf = 0;
+  errno_t err = 0;
+
+  ERR_REGION_BEGIN() {
+    size_t bytes = len * from->ops.type_size;
+    buf = malloc(bytes);
+    ERR_REGION_NULL_CHECK(buf, err);
+
+    memmove_s(buf, bytes, array, bytes);
+    self->array = buf;
+    self->length = len;
+
+    SAFE_FREE(old_array);
+    return self->array;
+
+  } ERR_REGION_END()
+
+  return NULL;
 }
 
 IMPLEMENT_POD_VALUE_VECTOR(int)

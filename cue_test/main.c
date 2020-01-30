@@ -40,6 +40,7 @@ int main(int argc, char const* argv[]) {
   result = test_int_queue() || result;
   result = test_double_queue() || result;
   result = test_parallel_traverse() || result;
-  
+  result = test_cue_traverse() || result;
+
   printf("%s\n", result ? "FAILURE!" : "All passed.");
 }

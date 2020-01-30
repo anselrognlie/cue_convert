@@ -7,8 +7,14 @@
 #include "cue_transform.h"
 #include "array_line_reader.h"
 #include "array_line_writer.h"
+#include "cue_traverse.h"
+#include "directory_traversal.h"
 
 #include "test_helpers.h"
+#include "err_helpers.h"
+
+static const char s_cue_src_dir[] = "..\\test_data\\cue_dir";
+static const char s_cue_trg_dir[] = "r:\\target_dir";
 
 static char const *s_cue_sheet[] = {
 "FILE \"track01.bin\" BINARY",
@@ -176,3 +182,24 @@ errno_t test_cue_transform(void) {
   return result;
 }
 
+errno_t test_cue_traverse(void) {
+  cue_traverse_visitor_t visitor;
+  errno_t err = 0;
+  errno_t op_err = 0;
+
+  //printf("Checking parallel path enumeration... ");
+
+  ERR_REGION_BEGIN() {
+    ERR_REGION_ERROR_CHECK(ctv_init_visitor(&visitor, s_cue_trg_dir, s_cue_src_dir, 1, 0), err);
+
+    traverse_dir_path(s_cue_src_dir, &visitor.handler_i);
+
+  } ERR_REGION_END()
+
+  op_err = ctv_uninit_visitor(&visitor);
+  err = err ? err : op_err;
+
+  //printf("%s\n", err ? "FAILED!" : "passed.");
+
+  return err;
+}

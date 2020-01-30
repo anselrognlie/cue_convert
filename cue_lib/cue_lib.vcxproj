@@ -22,11 +22,15 @@
     <ClInclude Include="cue_file.h" />
     <ClInclude Include="cue_parser.h" />
     <ClInclude Include="cue_transform.h" />
+    <ClInclude Include="cue_traverse.h" />
+    <ClInclude Include="cue_traverse_record.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cue_file.c" />
     <ClCompile Include="cue_parser.c" />
     <ClCompile Include="cue_transform.c" />
+    <ClCompile Include="cue_traverse.c" />
+    <ClCompile Include="cue_traverse_record.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
