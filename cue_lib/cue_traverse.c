@@ -153,7 +153,6 @@ static char * make_path_with_history(char_vector_t const* root_path, string_vect
     parallel_path = make_simple_path(root, path);
     ERR_REGION_NULL_CHECK_CODE(parallel_path, parallel_path, NULL);
 
-    SAFE_FREE(root);
     SAFE_FREE(path);
 
     return parallel_path;
@@ -161,7 +160,6 @@ static char * make_path_with_history(char_vector_t const* root_path, string_vect
   } ERR_REGION_END()
 
   SAFE_FREE(parallel_path);
-  SAFE_FREE(root);
   SAFE_FREE(path);
 
   return NULL;

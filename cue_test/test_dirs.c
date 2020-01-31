@@ -207,7 +207,6 @@ static short ptv_visit_exit(directory_traversal_handler_i* self_i, directory_tra
   } ERR_REGION_END()
 
   SAFE_FREE(parallel_path);
-  SAFE_FREE(root_path);
   SAFE_FREE(path);
 
   if (self->passed) self->passed = keep_traversing;

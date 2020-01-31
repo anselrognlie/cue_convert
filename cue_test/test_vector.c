@@ -169,7 +169,6 @@ errno_t test_string_holder_char(void) {
     ERR_REGION_CMP_CHECK(strcmp(cstr, "abc") != 0, result);
   } ERR_REGION_END()
 
-  SAFE_FREE(cstr);
   if (string) char_vector_free(string);
 
   printf("%s\n", result ? "FAILED!" : "passed.");

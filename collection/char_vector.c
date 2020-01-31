@@ -3,9 +3,11 @@
 #include <string.h>
 #include <stdlib.h>
 
+static char* alloc(struct value_vector* self, size_t item_count);
+
 struct value_vector_params char_vector_ops = {
   sizeof(char),
-  0
+  alloc,
 };
 
 IMPLEMENT_VALUE_VECTOR(char_vector, char)
@@ -20,13 +22,7 @@ char const* char_vector_set_str(struct char_vector* self, char const* instance) 
 }
 
 char const* char_vector_get_str(struct char_vector const* self) {
-  size_t str_len = value_vector_get_length(&self->self);
-  char *buf = malloc(str_len + 1);
-  if (! buf) return NULL;
-
-  memmove_s(buf, str_len + 1, value_vector_get_buffer(&self->self), str_len);
-  buf[str_len] = 0;
-  return buf;
+  return (char const* )self->self.array;
 }
 
 void char_vector_get_str_buf(struct char_vector const* self, char* buf, size_t buf_len) {
@@ -38,3 +34,10 @@ void char_vector_get_str_buf(struct char_vector const* self, char* buf, size_t b
   buf[str_len] = 0;
 }
 
+static char* alloc(struct value_vector* self, size_t item_count) {
+  char *buf = malloc(item_count + 1);
+  if (! buf) return NULL;
+
+  buf[item_count] = 0;
+  return buf;
+}
