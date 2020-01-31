@@ -34,7 +34,7 @@ errno_t test_string_join(void) {
   const size_t joined_len = strlen(s_joined_string);
 
   printf("Checking string join... ");
-  char const *joined = join_strings(strings, s_strings_len, "..");
+  char const *joined = join_cstrs(strings, s_strings_len, "..");
 
   errno_t result = -1;
   if (joined) {

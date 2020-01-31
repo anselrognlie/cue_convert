@@ -52,6 +52,27 @@ cue_traverse_record_t* cue_traverse_record_alloc(void) {
   return NULL;
 }
 
+cue_traverse_record_t* cue_traverse_record_alloc_with_paths(char const* target_path, char const* source_path) {
+  cue_traverse_record_t* self = 0;
+  errno_t err = 0;
+
+  ERR_REGION_BEGIN() {
+    self = malloc(sizeof(*self));
+    ERR_REGION_NULL_CHECK(self, err);
+
+    ERR_REGION_ERROR_CHECK(cue_traverse_record_init_with_paths(
+      self,
+      target_path,
+      source_path), err);
+
+    return self;
+  } ERR_REGION_END()
+
+    SAFE_FREE(self);
+
+  return NULL;
+}
+
 cue_traverse_record_t* cue_traverse_record_alloc_copy(cue_traverse_record_t const* src) {
   cue_traverse_record_t* self = 0;
   errno_t err = 0;
@@ -65,14 +86,13 @@ cue_traverse_record_t* cue_traverse_record_alloc_copy(cue_traverse_record_t cons
     return self;
   } ERR_REGION_END()
 
-  if (self) cue_traverse_record_free(self);
+  SAFE_FREE_HANDLER(self, cue_traverse_record_free);
 
   return NULL;
 }
 
 errno_t cue_traverse_record_init(cue_traverse_record_t* self) {
   errno_t err = 0;
-  errno_t op_err = 0;
 
   ERR_REGION_BEGIN() {
     memset(self, 0, sizeof(*self));
@@ -85,13 +105,26 @@ errno_t cue_traverse_record_init(cue_traverse_record_t* self) {
     return err;
   } ERR_REGION_END()
 
-  if (self) {
-    if (self->source_path) op_err = char_vector_free(self->source_path);
-    err = err ? err : op_err;
-    if (self->target_path) op_err = char_vector_free(self->target_path);
-    err = err ? err : op_err;
-    SAFE_FREE(self);
-  }
+  SAFE_FREE_HANDLER(self->source_path, char_vector_free);
+  SAFE_FREE_HANDLER(self->target_path, char_vector_free);
+
+  return err;
+}
+
+errno_t cue_traverse_record_init_with_paths(cue_traverse_record_t* self, char const* target_path, char const* source_path) {
+  errno_t err = 0;
+
+  ERR_REGION_BEGIN() {
+    ERR_REGION_ERROR_CHECK(cue_traverse_record_init(self), err);
+
+    ERR_REGION_BEGIN() {
+      ERR_REGION_NULL_CHECK(char_vector_set_str(self->source_path, source_path), err);
+      ERR_REGION_NULL_CHECK(char_vector_set_str(self->target_path, target_path), err);
+    } ERR_REGION_END()
+
+    // init was fine, but internal sets failed, so make sure to uninit
+    cue_traverse_record_uninit(self);
+  } ERR_REGION_END()
 
   return err;
 }

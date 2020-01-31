@@ -185,7 +185,7 @@ directory_entry_i* fs_next_dir_entry(file_handle_i* handle) {
 
 static char const* join_path(char const* base, char const* path) {
   char const *strings[] = { base, path };
-  return join_strings(strings, 2, k_path_separator);
+  return join_cstrs(strings, 2, k_path_separator);
 }
 
 static file_handle_i* fs_open_directory(file_handle_i const* handle, char const* path) {

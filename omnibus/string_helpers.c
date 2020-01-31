@@ -6,7 +6,7 @@
 #include "mem_helpers.h"
 #include "err_helpers.h"
 
-char const* join_strings(char const* strings[], size_t num_strings, char const* delim) {
+char const* join_cstrs(char const* strings[], size_t num_strings, char const* delim) {
   size_t* str_lens = 0;
   char* joined = 0;
   size_t delim_len = strlen(delim);
@@ -56,3 +56,14 @@ char const* join_strings(char const* strings[], size_t num_strings, char const* 
 
   return joined;
 }
+
+short cstr_ends_with(char const* cstr, char const* ending) {
+  if (!cstr || !ending) return 0;
+
+  size_t cstr_len = strlen(cstr);
+  size_t ending_len = strlen(ending);
+
+  if (cstr_len < ending_len) return 0;
+  return strncmp(cstr + (cstr_len - ending_len), ending, ending_len) == 0;
+}
+

@@ -129,7 +129,7 @@ errno_t test_string_vector_join(void) {
     string_vector_push(vec, "str2");
     string_vector_push(vec, "str3");
 
-    joined = join_strings(
+    joined = join_cstrs(
       string_vector_get_buffer(vec), 
       string_vector_get_length(vec),
       "//");

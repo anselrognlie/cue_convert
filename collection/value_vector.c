@@ -47,18 +47,13 @@ errno_t value_vector_init(struct value_vector* self, struct value_vector_params 
   return 0;
 }
 
-errno_t value_vector_uninit(struct value_vector* self) {
+void value_vector_uninit(struct value_vector* self) {
   free(self->array);
-
-  return 0;
 }
 
-errno_t value_vector_free(struct value_vector* self) {
-  errno_t result = value_vector_uninit(self);
-  if (result) return result;
-
+void value_vector_free(struct value_vector* self) {
+  value_vector_uninit(self);
   free(self);
-  return 0;
 }
 
 char const *value_vector_resize(value_vector_t* self, size_t size) {

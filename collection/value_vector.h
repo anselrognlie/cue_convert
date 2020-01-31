@@ -20,8 +20,8 @@ typedef struct value_vector {
 struct value_vector* value_vector_alloc(struct value_vector_params const* ops);
 struct value_vector* value_vector_alloc_copy(value_vector_t const* from);
 errno_t value_vector_init(value_vector_t* self, struct value_vector_params const* ops);
-errno_t value_vector_uninit(struct value_vector* self);
-errno_t value_vector_free(struct value_vector* self);
+void value_vector_uninit(struct value_vector* self);
+void value_vector_free(struct value_vector* self);
 
 // only to be used by extensions
 char const* value_vector_resize(value_vector_t* self, size_t size);
@@ -48,8 +48,8 @@ char const* value_vector_copy_from(struct value_vector* self, struct value_vecto
 struct vtype* vtype##_alloc(); \
 struct vtype* vtype##_alloc_copy(struct vtype const* from); \
 errno_t vtype##_init(struct vtype* self); \
-errno_t vtype##_uninit(struct vtype* self); \
-errno_t vtype##_free(struct vtype* self); \
+void vtype##_uninit(struct vtype* self); \
+void vtype##_free(struct vtype* self); \
 \
 size_t vtype##_get_length(struct vtype const* self); \
 type const* vtype##_get_buffer(struct vtype const* self); \
@@ -67,7 +67,7 @@ type const* vtype##_unshift(struct vtype* self, type instance); \
 errno_t vtype##_shift(struct vtype* self); \
 errno_t vtype##_shift_keep(struct vtype* self, type* out); \
 \
-type const* vtype##_copy_from(struct vtype* dst, struct vtype const* src); \
+type const* vtype##_copy_from(struct vtype* self, struct vtype const* from); \
 
 #define IMPLEMENT_VALUE_VECTOR(vtype, type) \
 struct vtype* vtype##_alloc() { \
@@ -85,7 +85,7 @@ struct vtype* vtype##_alloc_copy(struct vtype const* from) { \
   if (!self) return NULL; \
 \
   type const *result = vtype##_copy_from(self, from); \
-  if (result) return NULL; \
+  if (! result) return NULL; \
 \
   return self; \
 } \
@@ -94,15 +94,13 @@ errno_t vtype##_init(struct vtype* self) { \
   return value_vector_init(&self->self, &vtype##_ops); \
 } \
 \
-errno_t vtype##_uninit(struct vtype* self) { \
-  return value_vector_uninit(&self->self); \
+void vtype##_uninit(struct vtype* self) { \
+  value_vector_uninit(&self->self); \
 } \
 \
-errno_t vtype##_free(struct vtype* self) { \
-  errno_t result = value_vector_uninit(&self->self); \
-  if (result) return -1; \
+void vtype##_free(struct vtype* self) { \
+  value_vector_uninit(&self->self); \
   free(self); \
-  return 0; \
 } \
 \
 size_t vtype##_get_length(struct vtype const* self) { \
@@ -157,8 +155,8 @@ errno_t vtype##_shift_keep(struct vtype* self, type* out) { \
   return value_vector_shift_keep(&self->self, (char*)out); \
 } \
 \
-type const* vtype##_copy_from(struct vtype* dst, struct vtype const* src) { \
-  return (type const *)value_vector_copy_from(&dst->self, &src->self); \
+type const* vtype##_copy_from(struct vtype* self, struct vtype const* from) { \
+  return (type const *)value_vector_copy_from(&self->self, &from->self); \
 } \
 
 #define DECLARE_POD_VALUE_VECTOR(type) \

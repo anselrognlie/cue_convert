@@ -3,7 +3,37 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct object_vector* object_vector_alloc(struct object_vector_params* ops) {
+#include "err_helpers.h"
+#include "mem_helpers.h"
+
+void const* k_object_vector_shallow = (void const*)-1;
+
+static void* weak_alloc(size_t size);
+static void weak_free(void* instance);
+static void* weak_copy_in(void* dst, void const* src);
+
+object_vector_params_t object_vector_weak_params = {
+  sizeof(void*),
+  weak_alloc,
+  weak_free,
+  weak_copy_in,
+};
+
+static void* weak_alloc(size_t size) {
+  return (void *)k_object_vector_shallow;
+}
+
+static void weak_free(void* instance) {
+  return;
+}
+
+static void* weak_copy_in(void* dst, void const* src) {
+  if (dst != k_object_vector_shallow) return NULL;
+
+  return (void* )src;
+}
+
+struct object_vector* object_vector_alloc(struct object_vector_params const* ops) {
   object_vector_t *self = malloc(sizeof(*self));
   if (! self) return NULL;
 
@@ -16,7 +46,28 @@ struct object_vector* object_vector_alloc(struct object_vector_params* ops) {
   return self;
 }
 
-errno_t object_vector_init(struct object_vector* self, struct object_vector_params* ops) {
+struct object_vector* object_vector_alloc_copy(object_vector_t const* from) {
+  object_vector_t* self = 0;
+  errno_t err = 0;
+  void const** copy_result = 0;
+
+  ERR_REGION_BEGIN() {
+    self = object_vector_alloc(&from->ops);
+    ERR_REGION_NULL_CHECK(self, err);
+
+    copy_result = object_vector_copy_from(self, from);
+    ERR_REGION_NULL_CHECK(copy_result, err);
+
+    return self;
+
+  } ERR_REGION_END()
+
+  object_vector_free(self);
+
+  return NULL;
+}
+
+errno_t object_vector_init(struct object_vector* self, struct object_vector_params const* ops) {
   memset(self, 0, sizeof(*self));
   self->ops = *ops;
 
@@ -26,38 +77,33 @@ errno_t object_vector_init(struct object_vector* self, struct object_vector_para
   return 0;
 }
 
-errno_t object_vector_uninit(struct object_vector* self) {
+void object_vector_uninit(struct object_vector* self) {
   // release each thing we own
   for (size_t i = 0; i < self->length; ++i) {
     self->ops.free(self->array[i]);
   }
 
   free(self->array);
-
-  return 0;
 }
 
-errno_t object_vector_free(struct object_vector* self) {
-  errno_t result = object_vector_uninit(self);
-  if (result) return result;
-
+void object_vector_free(struct object_vector* self) {
+  object_vector_uninit(self);
   free(self);
-  return 0;
 }
 
-size_t object_vector_get_length(struct object_vector* self) {
+size_t object_vector_get_length(struct object_vector const* self) {
   return self->length;
 }
 
-void const** object_vector_get_buffer(struct object_vector* self) {
+void const** object_vector_get_buffer(struct object_vector const* self) {
   return self->array;
 }
 
-void const* object_vector_get(struct object_vector* self, size_t i) {
+void const* object_vector_get(struct object_vector const* self, size_t i) {
   return self->array[i];
 }
 
-static void * copy_in(struct object_vector* self, size_t i, void const* instance) {
+static void * make_copy(struct object_vector* self, void const* instance) {
   void* owned = self->ops.alloc(self->ops.type_size);
   if (!owned) return NULL;
 
@@ -74,7 +120,7 @@ void const* object_vector_set(struct object_vector* self, size_t i, void const* 
   void **current_i = self->array + i;
   if (*current_i == instance) return instance;
 
-  void *copied = copy_in(self, i, instance);
+  void *copied = make_copy(self, instance);
   if (!copied) {
     return NULL;
   }
@@ -134,7 +180,7 @@ void const* object_vector_insert_at(struct object_vector* self, size_t i, void c
     ++dst;
   }
 
-  void* copied = copy_in(self, i, instance);
+  void* copied = make_copy(self, instance);
   if (!copied) {
     free(new_array);
     return NULL;
@@ -172,3 +218,38 @@ errno_t object_vector_shift_keep(struct object_vector* self, void** out) {
   return object_vector_delete_at_keep(self, 0, out);
 }
 
+void const** object_vector_copy_from(struct object_vector* self, struct object_vector const* from) {
+  size_t len = from->length;
+  void** array = from->array;
+  void** old_array = self->array;
+  size_t old_len = self->length;
+  void** buf = 0;
+  errno_t err = 0;
+
+  ERR_REGION_BEGIN() {
+    size_t bytes = len * sizeof(void*);
+    buf = malloc(bytes);
+    ERR_REGION_NULL_CHECK(buf, err);
+
+    void* copied = 0;
+    for (size_t i = 0; i < len; ++i) {
+      copied = make_copy(self, *(array + i));
+      if (!copied) break;
+      buf[i] = copied;
+    }
+    ERR_REGION_NULL_CHECK(copied, err);
+
+    self->array = buf;
+    self->length = len;
+
+    for (size_t i = 0; i < old_len; ++i) {
+      self->ops.free(old_array[i]);
+    }
+    SAFE_FREE(old_array);
+
+    return self->array;
+
+  } ERR_REGION_END()
+
+  return NULL;
+}

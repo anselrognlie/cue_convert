@@ -12,8 +12,10 @@ typedef struct cue_traverse_record {
 } cue_traverse_record_t;
 
 cue_traverse_record_t* cue_traverse_record_alloc(void);
+cue_traverse_record_t* cue_traverse_record_alloc_with_paths(char const *target_path, char const *source_path);
 cue_traverse_record_t* cue_traverse_record_alloc_copy(cue_traverse_record_t const* src);
 errno_t cue_traverse_record_init(cue_traverse_record_t* self);
+errno_t cue_traverse_record_init_with_paths(cue_traverse_record_t* self, char const* target_path, char const* source_path);
 errno_t cue_traverse_record_copy_from(cue_traverse_record_t* dest, cue_traverse_record_t const* src);
 errno_t cue_traverse_record_uninit(cue_traverse_record_t* self);
 errno_t cue_traverse_record_free(cue_traverse_record_t* self);

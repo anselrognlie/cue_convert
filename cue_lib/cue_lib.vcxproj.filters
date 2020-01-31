@@ -30,6 +30,9 @@
     <ClInclude Include="cue_traverse_record.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cue_traverse_report.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cue_file.c">
@@ -45,6 +48,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="cue_traverse_record.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cue_traverse_report.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
