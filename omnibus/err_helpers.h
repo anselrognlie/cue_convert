@@ -4,6 +4,11 @@
 #define ERR_REGION_END() while(0);
 #define ERR_EXIT() break;
 
+#define ERR_REGION_NULL_EXIT(arg) \
+  if (!(arg)) { \
+    ERR_EXIT() \
+  }
+
 #define ERR_REGION_NULL_CHECK(arg, err) \
   ERR_REGION_NULL_CHECK_CODE(arg, err, -1)
 
@@ -13,12 +18,22 @@
     ERR_EXIT() \
   }
 
+#define ERR_REGION_ERROR_EXIT(arg) \
+  if (arg) { \
+    ERR_EXIT() \
+  }
+
 #define ERR_REGION_ERROR_CHECK(arg, err) \
   ERR_REGION_ERROR_CHECK_CODE(arg, err, -1)
 
 #define ERR_REGION_ERROR_CHECK_CODE(arg, err, code) \
   if (arg) { \
     err = (code); \
+    ERR_EXIT() \
+  }
+
+#define ERR_REGION_CMP_EXIT(cmp) \
+  if (cmp) { \
     ERR_EXIT() \
   }
 
@@ -35,6 +50,11 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+
+#define ERR_REGION_INVALID_EXIT(arg) \
+  if (INVALID_HANDLE_VALUE == (arg)) { \
+    ERR_EXIT() \
+  }
 
 #define ERR_REGION_INVALID_CHECK(arg, err) \
   ERR_REGION_INVALID_CHECK_CODE(arg, err, -1)

@@ -2,6 +2,8 @@
 
 #include <stddef.h>
 
+struct cue_traverse_record;
+
 typedef struct cue_traverse_report {
   int found_cue_count;
   int transformed_cue_count;
@@ -12,6 +14,9 @@ typedef struct cue_traverse_report {
 
 struct cue_traverse_report* cue_traverse_report_alloc();
 errno_t cue_traverse_report_init(struct cue_traverse_report* self);
-//errno_t cue_traverse_report_add_record()
+struct cue_traverse_record const* cue_traverse_report_add_record(
+  struct cue_traverse_report* self, 
+  struct cue_traverse_record *record, 
+  short transformed);
 void cue_traverse_report_uninit(struct cue_traverse_report* self);
 void cue_traverse_report_free(struct cue_traverse_report* self);

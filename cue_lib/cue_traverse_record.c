@@ -111,6 +111,7 @@ errno_t cue_traverse_record_init_with_paths(cue_traverse_record_t* self, char co
     ERR_REGION_BEGIN() {
       ERR_REGION_NULL_CHECK(char_vector_set_str(self->source_path, source_path), err);
       ERR_REGION_NULL_CHECK(char_vector_set_str(self->target_path, target_path), err);
+      return err;
     } ERR_REGION_END()
 
     // init was fine, but internal sets failed, so make sure to uninit

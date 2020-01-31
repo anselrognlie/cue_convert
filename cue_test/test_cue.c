@@ -186,7 +186,7 @@ errno_t test_cue_traverse(void) {
   cue_traverse_visitor_t visitor;
   errno_t err = 0;
 
-  //printf("Checking parallel path enumeration... ");
+  printf("Checking cue traversal... ");
 
   ERR_REGION_BEGIN() {
     ERR_REGION_ERROR_CHECK(cue_traverse_visitor_init(
@@ -198,11 +198,11 @@ errno_t test_cue_traverse(void) {
 
     traverse_dir_path(s_cue_src_dir, &visitor.handler_i);
 
+    cue_traverse_visitor_uninit(&visitor);
+
   } ERR_REGION_END()
 
-  cue_traverse_visitor_uninit(&visitor);
-
-  //printf("%s\n", err ? "FAILED!" : "passed.");
+  printf("%s\n", err ? "FAILED!" : "passed.");
 
   return err;
 }

@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+static char *alloc_default(struct value_vector* self, size_t item_count);
+
 struct value_vector* value_vector_alloc(struct value_vector_params const* ops) {
   value_vector_t* self = malloc(sizeof(*self));
   if (!self) return NULL;
@@ -41,7 +43,10 @@ errno_t value_vector_init(struct value_vector* self, struct value_vector_params 
   memset(self, 0, sizeof(*self));
   self->ops = *ops;
 
-  self->array = malloc(0);
+  // assign any needed defaults
+  if (! self->ops.array_alloc) self->ops.array_alloc = alloc_default;
+
+  self->array = self->ops.array_alloc(self, 0);
   if (!self->array) return -1;
 
   return 0;
@@ -60,7 +65,7 @@ char const *value_vector_resize(value_vector_t* self, size_t size) {
   size_t new_len = size;
   size_t type_size = self->ops.type_size;
 
-  char* new_array = malloc(new_len * type_size);
+  char* new_array = self->ops.array_alloc(self, new_len);
   if (!new_array) return NULL;
 
   memset(new_array, 0, new_len * type_size);
@@ -108,7 +113,7 @@ errno_t value_vector_delete_at(struct value_vector* self, size_t i) {
 errno_t value_vector_delete_at_keep(struct value_vector* self, size_t i, char* out) {
   size_t new_len = self->length - 1;
 
-  char* new_array = malloc(new_len * self->ops.type_size);
+  char* new_array = self->ops.array_alloc(self, new_len);
   if (!new_array) return -1;
 
   // copy everything into the new array except the one we're deleting
@@ -136,7 +141,7 @@ char const* value_vector_insert_at(struct value_vector* self, size_t i, char con
   size_t new_len = self->length + 1;
   size_t type_size = self->ops.type_size;
 
-  char* new_array = malloc(new_len * type_size);
+  char* new_array = self->ops.array_alloc(self, new_len);
   if (!new_array) return NULL;
 
   // copy everything into the new array except the one we're deleting
@@ -190,7 +195,7 @@ char const* value_vector_copy_from(struct value_vector* self, struct value_vecto
 
   ERR_REGION_BEGIN() {
     size_t bytes = len * from->ops.type_size;
-    buf = malloc(bytes);
+    buf = self->ops.array_alloc(self, len);
     ERR_REGION_NULL_CHECK(buf, err);
 
     memmove_s(buf, bytes, array, bytes);
@@ -203,6 +208,10 @@ char const* value_vector_copy_from(struct value_vector* self, struct value_vecto
   } ERR_REGION_END()
 
   return NULL;
+}
+
+static char* alloc_default(struct value_vector* self, size_t item_count) {
+  return malloc(item_count * self->ops.type_size);
 }
 
 IMPLEMENT_POD_VALUE_VECTOR(int)

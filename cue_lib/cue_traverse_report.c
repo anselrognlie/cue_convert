@@ -56,3 +56,32 @@ void cue_traverse_report_free(struct cue_traverse_report* self) {
   SAFE_FREE(self);
 }
 
+struct cue_traverse_record const* cue_traverse_report_add_record(
+  struct cue_traverse_report* self,
+  struct cue_traverse_record* record,
+  short transformed) {
+
+  cue_traverse_record_t const *added = 0;
+  errno_t err = 0;
+
+  ERR_REGION_BEGIN() {
+    if (transformed) {
+      added = cue_traverse_record_vector_push(self->transformed_list, record);
+      ERR_REGION_NULL_CHECK(added, err);
+
+      ++self->transformed_cue_count;
+      ++self->found_cue_count;
+    }
+    else {
+      added = cue_traverse_record_vector_push(self->transformed_list, record);
+      ERR_REGION_NULL_CHECK(added, err);
+
+      ++self->transformed_cue_count;
+      ++self->found_cue_count;
+    }
+
+    return added;
+  } ERR_REGION_END()
+
+  return NULL;
+}

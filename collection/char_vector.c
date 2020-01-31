@@ -5,6 +5,7 @@
 
 struct value_vector_params char_vector_ops = {
   sizeof(char),
+  0
 };
 
 IMPLEMENT_VALUE_VECTOR(char_vector, char)

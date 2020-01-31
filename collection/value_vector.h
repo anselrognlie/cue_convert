@@ -9,6 +9,7 @@ struct value_vector_params;
 
 typedef struct value_vector_params {
   size_t type_size;
+  char *(*array_alloc)(struct value_vector *self, size_t item_count);
 } value_vector_params_t;
 
 typedef struct value_vector {
@@ -169,6 +170,7 @@ DECLARE_VALUE_VECTOR(type##_vector, type)
 #define IMPLEMENT_POD_VALUE_VECTOR(type) \
 struct value_vector_params type##_vector_ops = { \
   sizeof(type), \
+  0, \
 }; \
 IMPLEMENT_VALUE_VECTOR(type##_vector, type)
 

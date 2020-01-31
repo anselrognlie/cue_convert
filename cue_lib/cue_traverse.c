@@ -11,8 +11,8 @@
 #include "cue_traverse_report.h"
 #include "cue_traverse_record.h"
 
-static char const* make_path_with_history(char_vector_t const* root_path, string_vector_t const* history);
-static char const* make_simple_path(char const *directory, char const*filename);
+static char * make_path_with_history(char_vector_t const* root_path, string_vector_t const* history);
+static char * make_simple_path(char const *directory, char const*filename);
 static short is_cue_file(char const *filename);
 
 //
@@ -26,41 +26,54 @@ static short ctv_visit(directory_traversal_handler_i* self_i, directory_traversa
   string_vector_t* history = state->history;
 
   short keep_traversing = 1;
-  char const* dst_path = 0;
-  char const *src_path = 0;
-  cue_traverse_record_t *record = 0;
+  char * dst_path = 0;
+  char *src_path = 0;
+  cue_traverse_record_t* record = 0;
+  cue_traverse_record_t const *added = 0;
   short transformed = 0;
+  cue_traverse_report_t *report = self->report;
 
   ERR_REGION_BEGIN() {
 
     if (is_cue_file(entry->get_name(entry))) {
       // found a cue
 
-      //// create a traverse record for this
-      //src_path = make_simple_path(
-      //  directory->get_path(directory),
-      //  entry->get_name(entry)
-      //);
-      //ERR_REGION_NULL_CHECK_CODE(src_path, keep_traversing, 0);
+      // create a traverse record for this
+      src_path = make_simple_path(
+        directory->get_path(directory),
+        entry->get_name(entry)
+      );
+      ERR_REGION_NULL_CHECK_CODE(src_path, keep_traversing, 0);
 
-      //dst_path = make_path_with_history(self->target_path, history);
-      //ERR_REGION_NULL_CHECK_CODE(dst_path, keep_traversing, 0);
+      dst_path = make_path_with_history(self->target_path, history);
+      ERR_REGION_NULL_CHECK_CODE(dst_path, keep_traversing, 0);
 
-      //record = cue_traverse_record_alloc_with_paths(dst_path, src_path);
-      //ERR_REGION_NULL_CHECK_CODE(record, keep_traversing, 0);
+      record = cue_traverse_record_alloc_with_paths(dst_path, src_path);
+      ERR_REGION_NULL_CHECK_CODE(record, keep_traversing, 0);
 
-      //// try to convert
-      //transformed = 1;
+      // don't need the paths any longer
+      SAFE_FREE(dst_path);
+      SAFE_FREE(src_path);
 
-      //// add the appropriate report category
+      // try to convert
+      transformed = 1;
+
+      // add the appropriate report category
+      added = cue_traverse_report_add_record(report, record, transformed);
+      ERR_REGION_NULL_CHECK_CODE(added, keep_traversing, 0);
     }
 
-
-    //printf("ctv:%s\n", dst_path);
+    return keep_traversing;
 
   } ERR_REGION_END()
 
-  SAFE_FREE(dst_path);
+  if (record) {
+    SAFE_FREE_HANDLER(record, cue_traverse_record_free);
+  }
+  else {
+    SAFE_FREE(dst_path);
+    SAFE_FREE(src_path);
+  }
 
   return keep_traversing;
 }
@@ -116,15 +129,15 @@ void cue_traverse_visitor_uninit(cue_traverse_visitor_t* self) {
   SAFE_FREE_HANDLER(self->target_path, char_vector_free);
 }
 
-static char const* make_simple_path(char const* directory, char const* filename) {
+static char * make_simple_path(char const* directory, char const* filename) {
   char const* parts[] = { directory, filename };
   return join_cstrs(parts, 2, k_path_separator);
 }
 
-static char const* make_path_with_history(char_vector_t const* root_path, string_vector_t const* history) {
-  char const* path = 0;
+static char * make_path_with_history(char_vector_t const* root_path, string_vector_t const* history) {
+  char * path = 0;
   char const* root = 0;
-  char const* parallel_path = 0;
+  char * parallel_path = 0;
 
   ERR_REGION_BEGIN() {
 
