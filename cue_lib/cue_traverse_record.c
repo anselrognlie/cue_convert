@@ -7,29 +7,20 @@
 #include "cue_file.h"
 #include "mem_helpers.h"
 
-static void* ctr_alloc(size_t size);
-static void ctr_free(void* instance);
-static void* ctr_copy_in(void* dst, void const* src);
+static void* acquire(void const* instance);
+static void release(void* instance);
 
 struct object_vector_params cue_traverse_record_vector_ops = {
-  sizeof(cue_traverse_record_t),
-  ctr_alloc,
-  ctr_free,
-  ctr_copy_in,
+  acquire,
+  release,
 };
 
-static void* ctr_alloc(size_t size) {
-  return cue_traverse_record_alloc();
-}
-
-static void ctr_free(void* instance) {
+static void release(void* instance) {
   cue_traverse_record_free((cue_traverse_record_t*)instance);
 }
 
-static void* ctr_copy_in(void* dst, void const* src) {
-  if (!cue_traverse_record_copy_from(dst, src)) return dst;
-
-  return NULL;
+static void* acquire(void const* instance) {
+  return (void *)instance;
 }
 
 IMPLEMENT_OBJECT_VECTOR(cue_traverse_record_vector, cue_traverse_record_t)

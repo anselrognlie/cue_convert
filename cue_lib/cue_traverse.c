@@ -36,23 +36,23 @@ static short ctv_visit(directory_traversal_handler_i* self_i, directory_traversa
     if (is_cue_file(entry->get_name(entry))) {
       // found a cue
 
-      // create a traverse record for this
-      src_path = make_simple_path(
-        directory->get_path(directory),
-        entry->get_name(entry)
-      );
-      ERR_REGION_NULL_CHECK_CODE(src_path, keep_traversing, 0);
+      //// create a traverse record for this
+      //src_path = make_simple_path(
+      //  directory->get_path(directory),
+      //  entry->get_name(entry)
+      //);
+      //ERR_REGION_NULL_CHECK_CODE(src_path, keep_traversing, 0);
 
-      dst_path = make_path_with_history(self->target_path, history);
-      ERR_REGION_NULL_CHECK_CODE(dst_path, keep_traversing, 0);
+      //dst_path = make_path_with_history(self->target_path, history);
+      //ERR_REGION_NULL_CHECK_CODE(dst_path, keep_traversing, 0);
 
-      record = cue_traverse_record_alloc_with_paths(dst_path, src_path);
-      ERR_REGION_NULL_CHECK_CODE(record, keep_traversing, 0);
+      //record = cue_traverse_record_alloc_with_paths(dst_path, src_path);
+      //ERR_REGION_NULL_CHECK_CODE(record, keep_traversing, 0);
 
-      // try to convert
-      transformed = 1;
+      //// try to convert
+      //transformed = 1;
 
-      // add the appropriate report category
+      //// add the appropriate report category
     }
 
 
@@ -111,8 +111,9 @@ errno_t cue_traverse_visitor_init(cue_traverse_visitor_t* self,
 }
 
 void cue_traverse_visitor_uninit(cue_traverse_visitor_t* self) {
-  if (self->source_path) char_vector_free(self->source_path);
-  if (self->target_path) char_vector_free(self->target_path);
+  SAFE_FREE_HANDLER(self->report, cue_traverse_report_free);
+  SAFE_FREE_HANDLER(self->source_path, char_vector_free);
+  SAFE_FREE_HANDLER(self->target_path, char_vector_free);
 }
 
 static char const* make_simple_path(char const* directory, char const* filename) {

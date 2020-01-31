@@ -5,13 +5,15 @@
 struct object_vector;
 struct object_vector_params;
 
-extern const void *k_object_vector_shallow;
+//extern const void *k_object_vector_shallow;
 
 typedef struct object_vector_params {
-  size_t type_size;
-  void* (*alloc)(size_t size);  // if vector should not copy, return k_object_vector_shallow
-  void (*free)(void* instance);  // might receive k_object_vector_shallow
-  void* (*copy_in)(void* dst, void const* src);
+  //size_t type_size;
+  //void* (*alloc)(size_t size);  // if vector should not copy, return k_object_vector_shallow
+  //void (*free)(void* instance);  // might receive k_object_vector_shallow
+  //void* (*copy_in)(void* dst, void const* src);
+  void* (*acquire)(void const* instance);
+  void (*release)(void *instance);
 } object_vector_params_t;
 
 extern object_vector_params_t object_vector_weak_params;

@@ -6,32 +6,24 @@
 #include "err_helpers.h"
 #include "mem_helpers.h"
 
-void const* k_object_vector_shallow = (void const*)-1;
+//void const* k_object_vector_shallow = (void const*)-1;
 
-static void* weak_alloc(size_t size);
-static void weak_free(void* instance);
-static void* weak_copy_in(void* dst, void const* src);
+static void weak_release(void* instance);
+static void* weak_acquire(void const* instance);
 
 object_vector_params_t object_vector_weak_params = {
-  sizeof(void*),
-  weak_alloc,
-  weak_free,
-  weak_copy_in,
+  weak_acquire,
+  weak_release,
 };
 
-static void* weak_alloc(size_t size) {
-  return (void *)k_object_vector_shallow;
-}
-
-static void weak_free(void* instance) {
+static void weak_release(void* instance) {
   return;
 }
 
-static void* weak_copy_in(void* dst, void const* src) {
-  if (dst != k_object_vector_shallow) return NULL;
-
-  return (void* )src;
+static void* weak_acquire(void const* instance) {
+  return (void* )instance;
 }
+
 
 struct object_vector* object_vector_alloc(struct object_vector_params const* ops) {
   object_vector_t *self = malloc(sizeof(*self));
@@ -80,7 +72,7 @@ errno_t object_vector_init(struct object_vector* self, struct object_vector_para
 void object_vector_uninit(struct object_vector* self) {
   // release each thing we own
   for (size_t i = 0; i < self->length; ++i) {
-    self->ops.free(self->array[i]);
+    self->ops.release(self->array[i]);
   }
 
   free(self->array);
@@ -103,31 +95,18 @@ void const* object_vector_get(struct object_vector const* self, size_t i) {
   return self->array[i];
 }
 
-static void * make_copy(struct object_vector* self, void const* instance) {
-  void* owned = self->ops.alloc(self->ops.type_size);
-  if (!owned) return NULL;
-
-  void* copied = self->ops.copy_in(owned, instance);
-  if (!copied) {
-    self->ops.free(owned);
-    return NULL;
-  }
-
-  return copied;
-}
-
 void const* object_vector_set(struct object_vector* self, size_t i, void const* instance) {
   void **current_i = self->array + i;
   if (*current_i == instance) return instance;
 
-  void *copied = make_copy(self, instance);
+  void *copied = self->ops.acquire(instance);
   if (!copied) {
     return NULL;
   }
 
   void *old = self->array[i];
   self->array[i] = copied;
-  self->ops.free(old);
+  self->ops.release(old);
 
   return copied;
 }
@@ -155,7 +134,7 @@ errno_t object_vector_delete_at_keep(struct object_vector* self, size_t i, void*
     *out = self->array[i];
   }
   else {
-    self->ops.free(self->array[i]);
+    self->ops.release(self->array[i]);
   }
 
   free(self->array);
@@ -180,7 +159,7 @@ void const* object_vector_insert_at(struct object_vector* self, size_t i, void c
     ++dst;
   }
 
-  void* copied = make_copy(self, instance);
+  void* copied = self->ops.acquire(instance);
   if (!copied) {
     free(new_array);
     return NULL;
@@ -233,7 +212,7 @@ void const** object_vector_copy_from(struct object_vector* self, struct object_v
 
     void* copied = 0;
     for (size_t i = 0; i < len; ++i) {
-      copied = make_copy(self, *(array + i));
+      copied = self->ops.acquire(*(array + i));
       if (!copied) break;
       buf[i] = copied;
     }
@@ -243,7 +222,7 @@ void const** object_vector_copy_from(struct object_vector* self, struct object_v
     self->length = len;
 
     for (size_t i = 0; i < old_len; ++i) {
-      self->ops.free(old_array[i]);
+      self->ops.acquire(old_array[i]);
     }
     SAFE_FREE(old_array);
 
