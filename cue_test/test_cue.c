@@ -186,11 +186,67 @@ errno_t test_cue_transform(void) {
   return result;
 }
 
+static char const *s_traverse_transformed[] = {
+  "..\\test_data\\cue_dir\\a\\a1game\\a1game.cue",
+  "..\\test_data\\cue_dir\\b\\b2game\\b2game.cue",
+  0,
+};
+
+static char const* s_traverse_failed[] = { 0 };
+
+static char const** s_traverse_results[] = {
+  s_traverse_transformed,
+  s_traverse_failed,
+};
+
+static errno_t compare_report(cue_traverse_report_t* report, char const*** cmp) {
+  errno_t err = 0;
+  char const** traverse_transformed = cmp[0];
+  char const** tt_len = traverse_transformed;
+  char const** traverse_failed = cmp[1];
+  char const** tf_len = traverse_failed;
+  int report_transformed = report->transformed_cue_count;
+  int report_failed = report->failed_cue_count;
+  int report_total = report->found_cue_count;
+
+  while (*tt_len++);
+  while (*tf_len++);
+  int num_transformed = tt_len - traverse_transformed - 1;
+  int num_failed = tf_len - traverse_failed - 1;
+
+  ERR_REGION_BEGIN() {
+    ERR_REGION_CMP_CHECK(report_total != report_transformed + report_failed, err);
+    ERR_REGION_CMP_CHECK(report_transformed != num_transformed, err);
+    ERR_REGION_CMP_CHECK(report_failed != report_failed, err);
+
+    short match = 0;
+    for (int i = 0; i < num_transformed; ++i) {
+      cue_traverse_record_t const* record = cue_traverse_record_vector_get(report->transformed_list, i);
+      char const *rec_src = char_vector_get_str(record->source_path);
+      match = strcmp(rec_src, traverse_transformed[i]) == 0;
+      if (!match) break;
+    }
+    ERR_REGION_CMP_CHECK(!match, err);
+
+    for (int i = 0; i < num_failed; ++i) {
+      cue_traverse_record_t const* record = cue_traverse_record_vector_get(report->failed_list, i);
+      char const* rec_src = char_vector_get_str(record->source_path);
+      match = strcmp(rec_src, traverse_failed[i]) == 0;
+      if (!match) break;
+    }
+    ERR_REGION_CMP_CHECK(!match, err);
+
+  } ERR_REGION_END()
+
+  return err;
+}
+
 errno_t test_cue_traverse(void) {
   cue_traverse_visitor_t visitor;
   cue_traverse_report_writer_t writer;
   array_line_writer_t line_writer;
   errno_t err = 0;
+  short passed = 0;
 
   printf("Checking cue traversal... ");
 
@@ -211,20 +267,23 @@ errno_t test_cue_traverse(void) {
 
     cue_traverse_report_t *report = visitor.report;
 
+    ERR_REGION_ERROR_CHECK(compare_report(report, s_traverse_results), err);
+
     ERR_REGION_ERROR_CHECK(cue_traverse_report_writer_write(&writer, report), err);
 
-    cue_traverse_report_writer_uninit(&writer);
-    cue_traverse_visitor_uninit(&visitor);
+    passed = 1;
 
   } ERR_REGION_END()
 
-  printf("%s\n", err ? "FAILED!" : "passed.");
+  printf("%s\n", passed ? "passed." : "FAILED!");
 
   int n = line_writer.num_lines;
   for (int i = 0; i < n; ++i) {
     printf("%s\n", line_writer.lines[i]);
   }
 
+  cue_traverse_report_writer_uninit(&writer);
+  cue_traverse_visitor_uninit(&visitor);
   array_line_writer_uninit(&line_writer);
 
   return err;
