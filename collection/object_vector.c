@@ -126,7 +126,7 @@ errno_t object_vector_delete_at_keep(struct object_vector* self, size_t i, void*
   for (size_t src = 0; src < self->length; ++src) {
     if (src == i) continue;
 
-    new_array[dst] = self->array[src];
+    ERR_IGNORE_WARNING(6386, new_array[dst] = self->array[src];)
     ++dst;
   }
 
@@ -147,6 +147,8 @@ errno_t object_vector_delete_at_keep(struct object_vector* self, size_t i, void*
 void const* object_vector_insert_at(struct object_vector* self, size_t i, void const* instance) {
   size_t new_len = self->length + 1;
 
+  if (i >= new_len) return NULL;
+
   void** new_array = malloc(new_len * sizeof(void*));
   if (!new_array) return NULL;
 
@@ -166,7 +168,7 @@ void const* object_vector_insert_at(struct object_vector* self, size_t i, void c
   }
 
   free(self->array);
-  new_array[i] = copied;
+  ERR_IGNORE_WARNING(6386, new_array[i] = copied;)
   self->array = new_array;
   self->length = new_len;
 
@@ -214,7 +216,7 @@ void const** object_vector_copy_from(struct object_vector* self, struct object_v
     for (size_t i = 0; i < len; ++i) {
       copied = self->ops.acquire(*(array + i));
       if (!copied) break;
-      buf[i] = copied;
+      ERR_IGNORE_WARNING(6386, buf[i] = copied;)
     }
     ERR_REGION_NULL_CHECK(copied, err);
 

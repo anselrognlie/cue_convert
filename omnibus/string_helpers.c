@@ -21,7 +21,7 @@ char * join_cstrs(char const* strings[], size_t num_strings, char const* delim) 
     size_t str_total_len = 0;
     for (size_t i = 0; i < num_strings; ++i) {
       size_t str_len = strlen(strings[i]);
-      str_lens[i] = str_len;
+      ERR_IGNORE_WARNING(6386, str_lens[i] = str_len;)
       str_total_len += str_len;
     }
 
@@ -41,7 +41,7 @@ char * join_cstrs(char const* strings[], size_t num_strings, char const* delim) 
         remaining_len -= delim_len;
       }
 
-      size_t curr_str_len = str_lens[i];
+      ERR_IGNORE_WARNING(6385, size_t curr_str_len = str_lens[i];)
       memmove_s(insert_at, remaining_len, strings[i], curr_str_len);
       insert_at += curr_str_len;
       remaining_len -= curr_str_len;

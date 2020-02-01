@@ -223,7 +223,9 @@ static errno_t compare_report(cue_traverse_report_t* report, char const*** cmp) 
     for (int i = 0; i < num_transformed; ++i) {
       cue_traverse_record_t const* record = cue_traverse_record_vector_get(report->transformed_list, i);
       char const *rec_src = char_vector_get_str(record->source_path);
-      match = strcmp(rec_src, traverse_transformed[i]) == 0;
+      char const *test_src = traverse_transformed[i];
+      if (! test_src) { match = 0; break; }
+      match = strcmp(rec_src, test_src) == 0;
       if (!match) break;
     }
     ERR_REGION_CMP_CHECK(!match, err);
@@ -231,7 +233,9 @@ static errno_t compare_report(cue_traverse_report_t* report, char const*** cmp) 
     for (int i = 0; i < num_failed; ++i) {
       cue_traverse_record_t const* record = cue_traverse_record_vector_get(report->failed_list, i);
       char const* rec_src = char_vector_get_str(record->source_path);
-      match = strcmp(rec_src, traverse_failed[i]) == 0;
+      char const* test_src = traverse_failed[i];
+      if (!test_src) { match = 0; break; }
+      match = strcmp(rec_src, test_src) == 0;
       if (!match) break;
     }
     ERR_REGION_CMP_CHECK(!match, err);

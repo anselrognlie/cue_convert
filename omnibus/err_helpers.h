@@ -65,4 +65,16 @@
     ERR_EXIT() \
   }
 
+#define ERR_IGNORE_WARNING(id, cmd) \
+  __pragma(warning(push)) \
+  __pragma(warning(disable:id)) \
+  cmd \
+  __pragma(warning(pop)) \
+
+#else
+
+Edefine ERR_IGNORE_WARNING(id, cmd) cmd
+
 #endif
+
+
