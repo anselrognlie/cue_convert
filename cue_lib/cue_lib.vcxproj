@@ -25,6 +25,7 @@
     <ClInclude Include="cue_traverse.h" />
     <ClInclude Include="cue_traverse_record.h" />
     <ClInclude Include="cue_traverse_report.h" />
+    <ClInclude Include="cue_traverse_report_writer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cue_file.c" />
@@ -33,6 +34,7 @@
     <ClCompile Include="cue_traverse.c" />
     <ClCompile Include="cue_traverse_record.c" />
     <ClCompile Include="cue_traverse_report.c" />
+    <ClCompile Include="cue_traverse_report_writer.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

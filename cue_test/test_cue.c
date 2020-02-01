@@ -9,6 +9,10 @@
 #include "array_line_writer.h"
 #include "cue_traverse.h"
 #include "directory_traversal.h"
+#include "cue_traverse_report.h"
+#include "cue_traverse_report_writer.h"
+#include "cue_traverse_record.h"
+#include "char_vector.h"
 
 #include "test_helpers.h"
 #include "err_helpers.h"
@@ -184,11 +188,18 @@ errno_t test_cue_transform(void) {
 
 errno_t test_cue_traverse(void) {
   cue_traverse_visitor_t visitor;
+  cue_traverse_report_writer_t writer;
+  array_line_writer_t line_writer;
   errno_t err = 0;
 
   printf("Checking cue traversal... ");
 
   ERR_REGION_BEGIN() {
+    array_line_writer_init(&line_writer);
+    ERR_REGION_ERROR_CHECK(cue_traverse_report_writer_init_params(
+      &writer,
+      &line_writer.line_writer), err);
+
     ERR_REGION_ERROR_CHECK(cue_traverse_visitor_init(
       &visitor, 
       s_cue_trg_dir, 
@@ -198,11 +209,23 @@ errno_t test_cue_traverse(void) {
 
     traverse_dir_path(s_cue_src_dir, &visitor.handler_i);
 
+    cue_traverse_report_t *report = visitor.report;
+
+    ERR_REGION_ERROR_CHECK(cue_traverse_report_writer_write(&writer, report), err);
+
+    cue_traverse_report_writer_uninit(&writer);
     cue_traverse_visitor_uninit(&visitor);
 
   } ERR_REGION_END()
 
   printf("%s\n", err ? "FAILED!" : "passed.");
+
+  int n = line_writer.num_lines;
+  for (int i = 0; i < n; ++i) {
+    printf("%s\n", line_writer.lines[i]);
+  }
+
+  array_line_writer_uninit(&line_writer);
 
   return err;
 }

@@ -74,5 +74,8 @@
     <ClCompile Include="path_shared.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="line_writer.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
