@@ -186,31 +186,66 @@ errno_t test_cue_transform(void) {
   return result;
 }
 
-static char const *s_traverse_transformed[] = {
-  "..\\test_data\\cue_dir\\a\\a1game\\a1game.cue",
-  "..\\test_data\\cue_dir\\b\\b2game\\b2game.cue",
+typedef struct {
+  char const *src;
+  char const *dst;
+} conversion_rec_t;
+
+static conversion_rec_t s_traverse_transformed[] = {
+  { "..\\test_data\\cue_dir\\a\\a1game\\a1game.cue", "r:\\target_dir\\a\\a1game\\a1game.cue" },
+  { "..\\test_data\\cue_dir\\b\\b2game\\b2game.cue", "r:\\target_dir\\b\\b2game\\b2game.cue" },
   0,
 };
 
-static char const* s_traverse_failed[] = { 0 };
+static conversion_rec_t s_traverse_failed[] = { 0 };
 
-static char const** s_traverse_results[] = {
-  s_traverse_transformed,
-  s_traverse_failed,
+typedef struct {
+  conversion_rec_t const* transformed;
+  conversion_rec_t const* failed;
+} conversion_recs_t;
+
+static conversion_recs_t s_traverse_results = {
+  (conversion_rec_t const*)&s_traverse_transformed,
+  (conversion_rec_t const*)&s_traverse_failed,
 };
 
-static errno_t compare_report(cue_traverse_report_t* report, char const*** cmp) {
+static short compare_record_lists(
+  cue_traverse_record_vector_t* report_recs,
+  conversion_rec_t const* test_recs, size_t len) {
+
+  short match = 1;
+  for (size_t i = 0; i < len; ++i) {
+    cue_traverse_record_t const* record = cue_traverse_record_vector_get(report_recs, i);
+
+    char const *rec, *test;
+    rec = char_vector_get_str(record->source_path);
+    test = test_recs[i].src;
+    if (!test) { match = 0; break; }
+    match = strcmp(rec, test) == 0;
+    if (!match) break;
+
+    rec = char_vector_get_str(record->target_path);
+    test = test_recs[i].dst;
+    if (!test) { match = 0; break; }
+    match = strcmp(rec, test) == 0;
+    if (!match) break;
+  }
+
+  return match;
+}
+
+static errno_t compare_report(cue_traverse_report_t* report, conversion_recs_t const *cmp) {
   errno_t err = 0;
-  char const** traverse_transformed = cmp[0];
-  char const** tt_len = traverse_transformed;
-  char const** traverse_failed = cmp[1];
-  char const** tf_len = traverse_failed;
+  conversion_rec_t const* traverse_transformed = cmp->transformed;
+  conversion_rec_t const* tt_len = traverse_transformed;
+  conversion_rec_t const* traverse_failed = cmp->failed;
+  conversion_rec_t const* tf_len = traverse_failed;
   int report_transformed = report->transformed_cue_count;
   int report_failed = report->failed_cue_count;
   int report_total = report->found_cue_count;
 
-  while (*tt_len++);
-  while (*tf_len++);
+  while ((*tt_len++).src);
+  while ((*tf_len++).src);
   int num_transformed = tt_len - traverse_transformed - 1;
   int num_failed = tf_len - traverse_failed - 1;
 
@@ -219,26 +254,8 @@ static errno_t compare_report(cue_traverse_report_t* report, char const*** cmp) 
     ERR_REGION_CMP_CHECK(report_transformed != num_transformed, err);
     ERR_REGION_CMP_CHECK(report_failed != report_failed, err);
 
-    short match = 0;
-    for (int i = 0; i < num_transformed; ++i) {
-      cue_traverse_record_t const* record = cue_traverse_record_vector_get(report->transformed_list, i);
-      char const *rec_src = char_vector_get_str(record->source_path);
-      char const *test_src = traverse_transformed[i];
-      if (! test_src) { match = 0; break; }
-      match = strcmp(rec_src, test_src) == 0;
-      if (!match) break;
-    }
-    ERR_REGION_CMP_CHECK(!match, err);
-
-    for (int i = 0; i < num_failed; ++i) {
-      cue_traverse_record_t const* record = cue_traverse_record_vector_get(report->failed_list, i);
-      char const* rec_src = char_vector_get_str(record->source_path);
-      char const* test_src = traverse_failed[i];
-      if (!test_src) { match = 0; break; }
-      match = strcmp(rec_src, test_src) == 0;
-      if (!match) break;
-    }
-    ERR_REGION_CMP_CHECK(!match, err);
+    ERR_REGION_CMP_CHECK(!compare_record_lists(report->transformed_list, traverse_transformed, num_transformed), err);
+    ERR_REGION_CMP_CHECK(!compare_record_lists(report->failed_list, traverse_failed, num_failed), err);
 
   } ERR_REGION_END()
 
@@ -271,7 +288,7 @@ errno_t test_cue_traverse(void) {
 
     cue_traverse_report_t *report = visitor.report;
 
-    ERR_REGION_ERROR_CHECK(compare_report(report, s_traverse_results), err);
+    ERR_REGION_ERROR_CHECK(compare_report(report, &s_traverse_results), err);
 
     ERR_REGION_ERROR_CHECK(cue_traverse_report_writer_write(&writer, report), err);
 
