@@ -24,6 +24,7 @@ extern struct object_vector_params cue_traverse_record_vector_ops;
 
 typedef struct cue_traverse_record_vector {
   object_vector_t vector_t;
+  INSERT_OBJECT_VECTOR_METHODS(cue_traverse_record_vector, cue_traverse_record_t)
 } cue_traverse_record_vector_t;
 
 DECLARE_OBJECT_VECTOR(cue_traverse_record_vector, cue_traverse_record_t)

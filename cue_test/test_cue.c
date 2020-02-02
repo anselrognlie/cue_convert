@@ -255,12 +255,13 @@ static short compare_result_arrays(
 
   if (error_len > 0 && ! result->has_errors) return 0;
 
-  size_t result_len = cue_sheet_parse_error_vector_get_length(result->errors);
+  cue_sheet_parse_error_vector_t *errors = result->errors;
+  size_t result_len = errors->get_length(errors);
   if (error_len != result_len) return 0;
 
   for (size_t i = 0; i < error_len; ++i) {
     error_test_record_t err_rec = output[i];
-    cue_sheet_parse_error_t const *res_rec = cue_sheet_parse_error_vector_get(result->errors, i);
+    cue_sheet_parse_error_t const *res_rec = errors->get(errors, i);
 
     if (err_rec.line_num != res_rec->line_num) return 0;
     if (strcmp(err_rec.line, res_rec->line) != 0) return 0;
@@ -327,16 +328,16 @@ static short compare_record_lists(
 
   short match = 1;
   for (size_t i = 0; i < len; ++i) {
-    cue_traverse_record_t const* record = cue_traverse_record_vector_get(report_recs, i);
+    cue_traverse_record_t const* record = report_recs->get(report_recs, i);
 
     char const *rec, *test;
-    rec = char_vector_get_str(record->source_path);
+    rec = record->source_path->get_str(record->source_path);
     test = test_recs[i].src;
     if (!test) { match = 0; break; }
     match = strcmp(rec, test) == 0;
     if (!match) break;
 
-    rec = char_vector_get_str(record->target_path);
+    rec = record->target_path->get_str(record->target_path);
     test = test_recs[i].dst;
     if (!test) { match = 0; break; }
     match = strcmp(rec, test) == 0;

@@ -72,7 +72,29 @@ errno_t vtype##_shift_keep(struct vtype* self, type** out); \
 \
 type const** vtype##_copy_from(struct vtype* self, struct vtype const* from); \
 
+#define INSERT_OBJECT_VECTOR_METHODS(vtype, type) \
+  void (*uninit)(struct vtype* self); \
+  void (*free)(struct vtype* self); \
+  size_t (*get_length)(struct vtype const* self); \
+  type const** (*get_buffer)(struct vtype const* self); \
+  type const* (*get)(struct vtype const* self, size_t i); \
+  type const * (*set)(struct vtype* self, size_t i, type const*instance); \
+  errno_t (*delete_at)(struct vtype* self, size_t i); \
+  errno_t (*delete_at_keep)(struct vtype* self, size_t i, type **out); \
+  type const* (*insert_at)(struct vtype* self, size_t i, type const*instance); \
+  type const* (*push)(struct vtype* self, type const* instance); \
+  errno_t (*pop)(struct vtype* self); \
+  errno_t (*pop_keep)(struct vtype* self, type** out); \
+  type const* (*unshift)(struct vtype* self, type const* instance); \
+  errno_t (*shift)(struct vtype* self); \
+  errno_t (*shift_keep)(struct vtype* self, type** out); \
+  type const** (*copy_from)(struct vtype* self, struct vtype const* from); \
+
+#define ZZZ_INTERNAL_IMPLEMENT_OBJECT_VECTOR_METHODS(vtype, method) \
+  self->method = vtype##_##method \
+
 #define IMPLEMENT_OBJECT_VECTOR(vtype, type) \
+\
 struct vtype* vtype##_alloc() { \
   vtype##_t* self = malloc(sizeof(*self)); \
   if (!self) return NULL; \
@@ -97,6 +119,23 @@ struct vtype* vtype##_alloc_copy(struct vtype const* from) { \
 } \
 \
 errno_t vtype##_init(struct vtype* self) { \
+  ZZZ_INTERNAL_IMPLEMENT_OBJECT_VECTOR_METHODS(vtype, uninit); \
+  ZZZ_INTERNAL_IMPLEMENT_OBJECT_VECTOR_METHODS(vtype, free); \
+  ZZZ_INTERNAL_IMPLEMENT_OBJECT_VECTOR_METHODS(vtype, get_length); \
+  ZZZ_INTERNAL_IMPLEMENT_OBJECT_VECTOR_METHODS(vtype, get_buffer); \
+  ZZZ_INTERNAL_IMPLEMENT_OBJECT_VECTOR_METHODS(vtype, get); \
+  ZZZ_INTERNAL_IMPLEMENT_OBJECT_VECTOR_METHODS(vtype, set); \
+  ZZZ_INTERNAL_IMPLEMENT_OBJECT_VECTOR_METHODS(vtype, delete_at); \
+  ZZZ_INTERNAL_IMPLEMENT_OBJECT_VECTOR_METHODS(vtype, delete_at_keep); \
+  ZZZ_INTERNAL_IMPLEMENT_OBJECT_VECTOR_METHODS(vtype, insert_at); \
+  ZZZ_INTERNAL_IMPLEMENT_OBJECT_VECTOR_METHODS(vtype, push); \
+  ZZZ_INTERNAL_IMPLEMENT_OBJECT_VECTOR_METHODS(vtype, pop); \
+  ZZZ_INTERNAL_IMPLEMENT_OBJECT_VECTOR_METHODS(vtype, pop_keep); \
+  ZZZ_INTERNAL_IMPLEMENT_OBJECT_VECTOR_METHODS(vtype, unshift); \
+  ZZZ_INTERNAL_IMPLEMENT_OBJECT_VECTOR_METHODS(vtype, shift); \
+  ZZZ_INTERNAL_IMPLEMENT_OBJECT_VECTOR_METHODS(vtype, shift_keep); \
+  ZZZ_INTERNAL_IMPLEMENT_OBJECT_VECTOR_METHODS(vtype, copy_from); \
+\
   return object_vector_init(&self->vector_t, &vtype##_ops); \
 } \
 \

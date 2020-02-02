@@ -10,6 +10,12 @@ struct value_vector_params char_vector_ops = {
   alloc,
 };
 
+#undef VALUE_VECTOR_INIT_CUSTOM
+#define VALUE_VECTOR_INIT_CUSTOM \
+  self->set_str = char_vector_set_str; \
+  self->get_str = char_vector_get_str; \
+  self->get_str_buf = char_vector_get_str_buf; \
+
 IMPLEMENT_VALUE_VECTOR(char_vector, char)
 
 char const* char_vector_set_str(struct char_vector* self, char const* instance) {

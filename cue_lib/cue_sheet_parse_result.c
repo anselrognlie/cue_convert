@@ -84,7 +84,7 @@ errno_t cue_sheet_parse_result_init(struct cue_sheet_parse_result* self) {
 }
 
 void cue_sheet_parse_result_uninit(struct cue_sheet_parse_result* self) {
-  cue_sheet_parse_error_vector_free(self->errors);
+  self->errors->free(self->errors);
 }
 
 void cue_sheet_parse_result_free(struct cue_sheet_parse_result* self) {
@@ -106,7 +106,7 @@ struct cue_sheet_parse_error const* cue_sheet_parse_result_add_error(
     error = cue_sheet_parse_error_alloc(line_num, line);
     ERR_REGION_NULL_CHECK(error, err);
 
-    added = cue_sheet_parse_error_vector_push(self->errors, error);
+    added = self->errors->push(self->errors, error);
     ERR_REGION_NULL_CHECK(added, err);
 
     self->has_errors = 1;

@@ -99,11 +99,11 @@ errno_t cue_traverse_visitor_init(cue_traverse_visitor_t* self,
 
     target_path_str = char_vector_alloc();
     ERR_REGION_NULL_CHECK(target_path_str, err);
-    ERR_REGION_NULL_CHECK(char_vector_set_str(target_path_str, target_path), err);
+    ERR_REGION_NULL_CHECK(target_path_str->set_str(target_path_str, target_path), err);
 
     source_path_str = char_vector_alloc();
     ERR_REGION_NULL_CHECK(source_path_str, err);
-    ERR_REGION_NULL_CHECK(char_vector_set_str(source_path_str, source_path), err);
+    ERR_REGION_NULL_CHECK(source_path_str->set_str(source_path_str, source_path), err);
 
     report = cue_traverse_report_alloc();
     ERR_REGION_NULL_CHECK(report, err);
@@ -116,9 +116,9 @@ errno_t cue_traverse_visitor_init(cue_traverse_visitor_t* self,
 
   } ERR_REGION_END()
 
-  if (report) cue_traverse_report_free(report);
-  if (source_path_str) char_vector_free(source_path_str);
-  if (target_path_str) char_vector_free(target_path_str);
+  SAFE_FREE_HANDLER(report, cue_traverse_report_free);
+  SAFE_FREE_HANDLER(source_path_str, char_vector_free);
+  SAFE_FREE_HANDLER(target_path_str, char_vector_free);
 
   return err;
 }
@@ -142,12 +142,12 @@ static char * make_path_with_history(char_vector_t const* root_path, string_vect
   ERR_REGION_BEGIN() {
 
     path = join_cstrs(
-      string_vector_get_buffer(history),
-      string_vector_get_length(history),
+      history->get_buffer(history),
+      history->get_length(history),
       k_path_separator);
     ERR_REGION_NULL_CHECK_CODE(path, parallel_path, NULL);
 
-    root = char_vector_get_str(root_path);
+    root = root_path->get_str(root_path);
     ERR_REGION_NULL_CHECK_CODE(root, parallel_path, NULL);
 
     parallel_path = make_simple_path(root, path);

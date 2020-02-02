@@ -13,6 +13,7 @@ extern struct object_vector_params cue_sheet_parse_error_vector_ops;
 
 typedef struct cue_sheet_parse_error_vector {
   object_vector_t vector_t;
+  INSERT_OBJECT_VECTOR_METHODS(cue_sheet_parse_error_vector, cue_sheet_parse_error_t)
 } cue_sheet_parse_error_vector_t;
 
 DECLARE_OBJECT_VECTOR(cue_sheet_parse_error_vector, cue_sheet_parse_error_t);

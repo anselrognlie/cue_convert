@@ -8,6 +8,7 @@
 #include "directory_traversal_handler.h"
 #include "string_vector.h"
 #include "err_helpers.h"
+#include "mem_helpers.h"
 
 static const char s_current_dir[] = ".";
 static const char s_parent_dir[] = "..";
@@ -67,7 +68,7 @@ short traverse_dir_opts(file_handle_i* directory, struct directory_traversal_opt
 
   short keep_traversing = traverse_dir_internal(directory, opts, &state, handler);
 
-  string_vector_free(state.history);
+  SAFE_FREE_HANDLER(state.history, string_vector_free);
 
   return keep_traversing;
 }
@@ -108,7 +109,7 @@ static short traverse_dir_internal(
       handler_state.entry = entry;
       handler_state.last_entry = dir->is_eof(dir);
       ERR_REGION_NULL_CHECK_CODE(
-        string_vector_push(handler_state.history, entry->get_name(entry)),
+        handler_state.history->push(handler_state.history, entry->get_name(entry)),
         keep_traversing, 0);
 
       if (!opts->post_visit && handler->visit) {
@@ -131,7 +132,7 @@ static short traverse_dir_internal(
         keep_traversing = handler->exit(handler, &handler_state);
       }
 
-      string_vector_pop(handler_state.history);
+      handler_state.history->pop(handler_state.history);
       handler_state.first_entry = 0;
 
     } ERR_REGION_END()

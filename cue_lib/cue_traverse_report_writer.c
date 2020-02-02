@@ -50,9 +50,9 @@ errno_t cue_traverse_report_writer_write(
     ERR_REGION_CMP_CHECK(!line_writer_write_fmt(writer, "%s", "Transformed files:"), err);
 
     for (int i = 0; i < report->transformed_cue_count; ++i) {
-      cue_traverse_record_t const* record = cue_traverse_record_vector_get(report->transformed_list, i);
-      char const* src_path = char_vector_get_str(record->source_path);
-      char const* dst_path = char_vector_get_str(record->target_path);
+      cue_traverse_record_t const* record = report->transformed_list->get(report->transformed_list, i);
+      char const* src_path = record->source_path->get_str(record->source_path);
+      char const* dst_path = record->target_path->get_str(record->target_path);
       written = line_writer_write_fmt(writer, "%s%s%s%s", "  ", src_path, " -> ", dst_path);
       if (! written) break;
     }
@@ -62,9 +62,9 @@ errno_t cue_traverse_report_writer_write(
     ERR_REGION_CMP_CHECK(!line_writer_write_fmt(writer, "%s", "Failed files:"), err);
 
     for (int i = 0; i < report->failed_cue_count; ++i) {
-      cue_traverse_record_t const* record = cue_traverse_record_vector_get(report->failed_list, i);
-      char const* src_path = char_vector_get_str(record->source_path);
-      char const* dst_path = char_vector_get_str(record->target_path);
+      cue_traverse_record_t const* record = report->failed_list->get(report->failed_list, i);
+      char const* src_path = record->source_path->get_str(record->source_path);
+      char const* dst_path = record->target_path->get_str(record->target_path);
       written = line_writer_write_fmt(writer, "%s%s%s%s", "  ", src_path, " -> ", dst_path);
       if (!written) break;
     }

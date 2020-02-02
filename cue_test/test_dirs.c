@@ -191,12 +191,12 @@ static short ptv_visit_exit(directory_traversal_handler_i* self_i, directory_tra
     ERR_REGION_CMP_CHECK_CODE(i >= self->result_len, keep_traversing, 0);
 
     path = join_cstrs(
-      string_vector_get_buffer(history),
-      string_vector_get_length(history),
+      history->get_buffer(history),
+      history->get_length(history),
       "\\");
     ERR_REGION_NULL_CHECK_CODE(path, keep_traversing, 0);
 
-    root_path = char_vector_get_str(&self->root_path);
+    root_path = self->root_path.get_str(&self->root_path);
     ERR_REGION_NULL_CHECK_CODE(root_path, keep_traversing, 0);
 
     char const* parts[] = { root_path, path };
@@ -235,7 +235,7 @@ static errno_t ptv_init_visitor(parallel_traverse_visitor_t* self,
     self->result_len = result_len;
 
     ERR_REGION_ERROR_CHECK(char_vector_init(&self->root_path), err);
-    ERR_REGION_NULL_CHECK(char_vector_set_str(&self->root_path, root_path), err);
+    ERR_REGION_NULL_CHECK(self->root_path.set_str(&self->root_path, root_path), err);
 
   } ERR_REGION_END()
 
@@ -243,7 +243,7 @@ static errno_t ptv_init_visitor(parallel_traverse_visitor_t* self,
 }
 
 static void ptv_uninit_visitor(parallel_traverse_visitor_t* self) {
-  char_vector_uninit(&self->root_path);
+  self->root_path.uninit(&self->root_path);
 }
 
 //

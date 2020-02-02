@@ -40,15 +40,15 @@ errno_t cue_traverse_report_init(struct cue_traverse_report* self) {
 
   } ERR_REGION_END()
 
-  if (failed) cue_traverse_record_vector_free(failed);
-  if (transformed) cue_traverse_record_vector_free(transformed);
+  SAFE_FREE_HANDLER(failed, cue_traverse_record_vector_free);
+  SAFE_FREE_HANDLER(transformed, cue_traverse_record_vector_free);
 
   return err;
 }
 
 void cue_traverse_report_uninit(struct cue_traverse_report* self) {
-  cue_traverse_record_vector_free(self->failed_list);
-  cue_traverse_record_vector_free(self->transformed_list);
+  SAFE_FREE_HANDLER(self->failed_list, cue_traverse_record_vector_free);
+  SAFE_FREE_HANDLER(self->transformed_list, cue_traverse_record_vector_free);
 }
 
 void cue_traverse_report_free(struct cue_traverse_report* self) {
@@ -66,17 +66,17 @@ struct cue_traverse_record const* cue_traverse_report_add_record(
 
   ERR_REGION_BEGIN() {
     if (transformed) {
-      added = cue_traverse_record_vector_push(self->transformed_list, record);
+      added = self->transformed_list->push(self->transformed_list, record);
       ERR_REGION_NULL_CHECK(added, err);
 
       ++self->transformed_cue_count;
       ++self->found_cue_count;
     }
     else {
-      added = cue_traverse_record_vector_push(self->transformed_list, record);
+      added = self->failed_list->push(self->failed_list, record);
       ERR_REGION_NULL_CHECK(added, err);
 
-      ++self->transformed_cue_count;
+      ++self->failed_cue_count;
       ++self->found_cue_count;
     }
 

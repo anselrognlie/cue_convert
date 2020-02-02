@@ -109,8 +109,8 @@ errno_t cue_traverse_record_init_with_paths(cue_traverse_record_t* self, char co
     ERR_REGION_ERROR_CHECK(cue_traverse_record_init(self), err);
 
     ERR_REGION_BEGIN() {
-      ERR_REGION_NULL_CHECK(char_vector_set_str(self->source_path, source_path), err);
-      ERR_REGION_NULL_CHECK(char_vector_set_str(self->target_path, target_path), err);
+      ERR_REGION_NULL_CHECK(self->source_path->set_str(self->source_path, source_path), err);
+      ERR_REGION_NULL_CHECK(self->target_path->set_str(self->target_path, target_path), err);
       return err;
     } ERR_REGION_END()
 
@@ -152,28 +152,28 @@ errno_t cue_traverse_record_copy_from(cue_traverse_record_t* self, cue_traverse_
     self->target_sheet = target_sheet;
     self->source_sheet = source_sheet;
 
-    if (old_target_sheet) cue_sheet_free(old_target_sheet);
-    if (old_source_sheet) cue_sheet_free(old_source_sheet);
-    char_vector_free(old_target_path);
-    char_vector_free(old_source_path);
+    SAFE_FREE_HANDLER(old_target_sheet, cue_sheet_free);
+    SAFE_FREE_HANDLER(old_source_sheet, cue_sheet_free);
+    SAFE_FREE_HANDLER(old_target_path, char_vector_free);
+    SAFE_FREE_HANDLER(old_source_path, char_vector_free);
 
     return err;
 
   } ERR_REGION_END()
 
-  if (source_sheet) cue_sheet_free(source_sheet);
-  if (target_sheet) cue_sheet_free(target_sheet);
-  if (source_path) char_vector_free(source_path);
-  if (target_path) char_vector_free(target_path);
+  SAFE_FREE_HANDLER(source_sheet, cue_sheet_free);
+  SAFE_FREE_HANDLER(target_sheet, cue_sheet_free);
+  SAFE_FREE_HANDLER(source_path, char_vector_free);
+  SAFE_FREE_HANDLER(target_path, char_vector_free);
 
   return err;
 }
 
 errno_t cue_traverse_record_uninit(cue_traverse_record_t* self) {
-  if (self->target_sheet) cue_sheet_free(self->target_sheet);
-  if (self->source_sheet) cue_sheet_free(self->source_sheet);
-  char_vector_free(self->source_path);
-  char_vector_free(self->target_path);
+  SAFE_FREE_HANDLER(self->target_sheet, cue_sheet_free);
+  SAFE_FREE_HANDLER(self->source_sheet, cue_sheet_free);
+  SAFE_FREE_HANDLER(self->source_path, char_vector_free);
+  SAFE_FREE_HANDLER(self->target_path, char_vector_free);
   return 0;
 }
 
