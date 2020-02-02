@@ -22,13 +22,13 @@ static char const* parse_track_mode(char const* buf, cue_track_mode_t* mode);
 static char const* ctm2str(cue_track_mode_t mode);
 static char const* parse_time(char const* buf, cue_time_t *time);
 
-cue_sheet_t* cue_sheet_parse_file(FILE* fid) {
+cue_sheet_t* cue_sheet_parse_file(FILE* fid, struct cue_sheet_parse_result* out) {
   file_line_reader_t line_reader;
   file_line_reader_init_fid(&line_reader, fid);
-  return cue_sheet_parse(&line_reader.line_reader);
+  return cue_sheet_parse(&line_reader.line_reader, out);
 }
 
-cue_sheet_t* cue_sheet_parse_filename(char const* filename) {
+cue_sheet_t* cue_sheet_parse_filename(char const* filename, struct cue_sheet_parse_result* out) {
   FILE* cue_in;
   errno_t result = fopen_s(&cue_in, filename, "rb");
   if (!cue_in) {
@@ -36,14 +36,14 @@ cue_sheet_t* cue_sheet_parse_filename(char const* filename) {
     return NULL;
   }
 
-  cue_sheet_t *sheet = cue_sheet_parse_file(cue_in);
+  cue_sheet_t *sheet = cue_sheet_parse_file(cue_in, out);
 
   fclose(cue_in);
 
   return sheet;
 }
 
-cue_sheet_t* cue_sheet_parse(line_reader_i *reader) {
+cue_sheet_t* cue_sheet_parse(line_reader_i *reader, struct cue_sheet_parse_result* out) {
   char const *line;
   size_t bytes;
   int has_error = 0;
@@ -458,4 +458,3 @@ static char const* parse_time(char const* buf, cue_time_t* time) {
 
   return next;
 }
-

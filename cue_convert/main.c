@@ -34,7 +34,7 @@ int main(int argc, char const *argv[]) {
     return 0;
   }
 
-  cue_sheet_t *sheet = cue_sheet_parse_filename(cue);
+  cue_sheet_t *sheet = cue_sheet_parse_filename(cue, NULL);
   if (sheet) {
     cue_sheet_write_file(sheet, stdout);
     cue_sheet_free(sheet);

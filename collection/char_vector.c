@@ -14,7 +14,7 @@ IMPLEMENT_VALUE_VECTOR(char_vector, char)
 
 char const* char_vector_set_str(struct char_vector* self, char const* instance) {
   int new_len = strlen(instance);
-  char *buf = (char* )value_vector_resize(&self->self, new_len);
+  char *buf = (char* )value_vector_resize(&self->vector_t, new_len);
   if (! buf) return NULL;
 
   memmove_s(buf, new_len, instance, new_len);
@@ -22,15 +22,15 @@ char const* char_vector_set_str(struct char_vector* self, char const* instance) 
 }
 
 char const* char_vector_get_str(struct char_vector const* self) {
-  return (char const* )self->self.array;
+  return (char const* )self->vector_t.array;
 }
 
 void char_vector_get_str_buf(struct char_vector const* self, char* buf, size_t buf_len) {
   // ensure the buffer is large enough (including the null byte)
-  size_t str_len = value_vector_get_length(&self->self);
+  size_t str_len = value_vector_get_length(&self->vector_t);
   if (buf_len < str_len + 1) return;
 
-  memmove_s(buf, buf_len, value_vector_get_buffer(&self->self), str_len);
+  memmove_s(buf, buf_len, value_vector_get_buffer(&self->vector_t), str_len);
   buf[str_len] = 0;
 }
 

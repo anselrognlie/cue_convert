@@ -92,78 +92,78 @@ struct vtype* vtype##_alloc_copy(struct vtype const* from) { \
 } \
 \
 errno_t vtype##_init(struct vtype* self) { \
-  return value_vector_init(&self->self, &vtype##_ops); \
+  return value_vector_init(&self->vector_t, &vtype##_ops); \
 } \
 \
 void vtype##_uninit(struct vtype* self) { \
-  value_vector_uninit(&self->self); \
+  value_vector_uninit(&self->vector_t); \
 } \
 \
 void vtype##_free(struct vtype* self) { \
-  value_vector_uninit(&self->self); \
+  value_vector_uninit(&self->vector_t); \
   free(self); \
 } \
 \
 size_t vtype##_get_length(struct vtype const* self) { \
-  return value_vector_get_length(&self->self); \
+  return value_vector_get_length(&self->vector_t); \
 } \
 \
 type const* vtype##_get_buffer(struct vtype const* self) { \
-  return (type const*)value_vector_get_buffer(&self->self); \
+  return (type const*)value_vector_get_buffer(&self->vector_t); \
 } \
 \
 type vtype##_get(struct vtype const* self, size_t i) { \
-  return *(type const*)value_vector_get(&self->self, i); \
+  return *(type const*)value_vector_get(&self->vector_t, i); \
 } \
 \
 void vtype##_set(struct vtype* self, size_t i, type instance) { \
-  value_vector_set(&self->self, i, (char const *)&instance); \
+  value_vector_set(&self->vector_t, i, (char const *)&instance); \
 } \
 \
 errno_t vtype##_delete_at(struct vtype* self, size_t i) { \
-  return value_vector_delete_at(&self->self, i); \
+  return value_vector_delete_at(&self->vector_t, i); \
 } \
 \
 errno_t vtype##_delete_at_keep(struct vtype* self, size_t i, type* out) { \
-  return value_vector_delete_at_keep(&self->self, i, (char*)out); \
+  return value_vector_delete_at_keep(&self->vector_t, i, (char*)out); \
 } \
 \
 type const* vtype##_insert_at(struct vtype* self, size_t i, type instance) { \
-  return (type const*)value_vector_insert_at(&self->self, i, (char const *)&instance); \
+  return (type const*)value_vector_insert_at(&self->vector_t, i, (char const *)&instance); \
 } \
 \
 type const* vtype##_push(struct vtype* self, type instance) { \
-  return (type const*)value_vector_push(&self->self, (char const*)&instance); \
+  return (type const*)value_vector_push(&self->vector_t, (char const*)&instance); \
 } \
 \
 errno_t vtype##_pop(struct vtype* self) { \
-  return value_vector_pop(&self->self); \
+  return value_vector_pop(&self->vector_t); \
 } \
 \
 errno_t vtype##_pop_keep(struct vtype* self, type* out) { \
-  return value_vector_pop_keep(&self->self, (char*)out); \
+  return value_vector_pop_keep(&self->vector_t, (char*)out); \
 } \
 \
 type const* vtype##_unshift(struct vtype* self, type instance) { \
-  return (type const*)value_vector_unshift(&self->self, (char const*)&instance); \
+  return (type const*)value_vector_unshift(&self->vector_t, (char const*)&instance); \
 } \
 \
 errno_t vtype##_shift(struct vtype* self) { \
-  return value_vector_shift(&self->self); \
+  return value_vector_shift(&self->vector_t); \
 } \
 \
 errno_t vtype##_shift_keep(struct vtype* self, type* out) { \
-  return value_vector_shift_keep(&self->self, (char*)out); \
+  return value_vector_shift_keep(&self->vector_t, (char*)out); \
 } \
 \
 type const* vtype##_copy_from(struct vtype* self, struct vtype const* from) { \
-  return (type const *)value_vector_copy_from(&self->self, &from->self); \
+  return (type const *)value_vector_copy_from(&self->vector_t, &from->vector_t); \
 } \
 
 #define DECLARE_POD_VALUE_VECTOR(type) \
 extern struct value_vector_params type##_vector_ops; \
 typedef struct type##_vector { \
-  value_vector_t self; \
+  value_vector_t vector_t; \
 } type##_vector_t; \
 DECLARE_VALUE_VECTOR(type##_vector, type)
 

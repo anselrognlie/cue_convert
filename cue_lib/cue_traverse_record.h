@@ -23,7 +23,7 @@ errno_t cue_traverse_record_free(cue_traverse_record_t* self);
 extern struct object_vector_params cue_traverse_record_vector_ops;
 
 typedef struct cue_traverse_record_vector {
-  object_vector_t self;
+  object_vector_t vector_t;
 } cue_traverse_record_vector_t;
 
 DECLARE_OBJECT_VECTOR(cue_traverse_record_vector, cue_traverse_record_t)

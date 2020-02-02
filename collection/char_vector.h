@@ -5,7 +5,7 @@
 extern struct value_vector_params char_vector_ops;
 
 typedef struct char_vector {
-  value_vector_t self;
+  value_vector_t vector_t;
 } char_vector_t;
 
 DECLARE_VALUE_VECTOR(char_vector, char)

@@ -76,7 +76,7 @@ errno_t test_cue(void) {
 
   array_line_reader_t reader;
   array_line_reader_init_lines(&reader, GET_SIZE(s_cue_sheet));
-  cue_sheet_t* sheet = cue_sheet_parse(&reader.line_reader);
+  cue_sheet_t* sheet = cue_sheet_parse(&reader.line_reader, NULL);
 
   if (!sheet) {
     printf("FAILED!\n");
@@ -108,7 +108,7 @@ errno_t test_cue_copy(void) {
 
   array_line_reader_t reader;
   array_line_reader_init_lines(&reader, GET_SIZE(s_cue_sheet));
-  cue_sheet_t* sheet = cue_sheet_parse(&reader.line_reader);
+  cue_sheet_t* sheet = cue_sheet_parse(&reader.line_reader, NULL);
 
   if (!sheet) {
     printf("FAILED!\n");
@@ -148,7 +148,7 @@ errno_t test_cue_transform(void) {
 
   array_line_reader_t reader;
   array_line_reader_init_lines(&reader, GET_SIZE(s_cue_sheet));
-  cue_sheet_t* sheet = cue_sheet_parse(&reader.line_reader);
+  cue_sheet_t* sheet = cue_sheet_parse(&reader.line_reader, NULL);
 
   if (!sheet) {
     printf("FAILED!\n");

@@ -5,7 +5,7 @@
 extern struct object_vector_params string_vector_ops;
 
 typedef struct string_vector {
-  object_vector_t self;
+  object_vector_t vector_t;
 } string_vector_t;
 
 DECLARE_OBJECT_VECTOR(string_vector, char)
