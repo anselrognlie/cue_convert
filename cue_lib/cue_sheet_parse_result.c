@@ -4,11 +4,12 @@
 #include <stdlib.h>
 
 #include "mem_helpers.h"
+#include "err_helpers.h"
 
 static void* acquire(void const* instance);
 static void release(void* instance);
 
-struct object_vector_params vector_ops = {
+struct object_vector_params cue_sheet_parse_error_vector_ops = {
   acquire,
   release,
 };
@@ -39,6 +40,8 @@ struct cue_sheet_parse_error* cue_sheet_parse_error_alloc(
 errno_t cue_sheet_parse_error_init(struct cue_sheet_parse_error* self,
   size_t line_num,
   char const* line) {
+  memset(self, 0, sizeof(*self));
+
   char const *buf = _strdup(line);
   if (!buf) return -1;
 
@@ -70,6 +73,8 @@ struct cue_sheet_parse_result* cue_sheet_parse_result_alloc() {
 }
 
 errno_t cue_sheet_parse_result_init(struct cue_sheet_parse_result* self) {
+  memset(self, 0, sizeof(*self));
+
   cue_sheet_parse_error_vector_t *vector = cue_sheet_parse_error_vector_alloc();
   if (! vector) return -1;
 
@@ -86,3 +91,33 @@ void cue_sheet_parse_result_free(struct cue_sheet_parse_result* self) {
   cue_sheet_parse_result_uninit(self);
   SAFE_FREE(self);
 }
+
+struct cue_sheet_parse_error const* cue_sheet_parse_result_add_error(
+  struct cue_sheet_parse_result* self,
+  size_t line_num,
+  char const* line) {
+
+  errno_t err = 0;
+  cue_sheet_parse_error_t* error = 0;
+  cue_sheet_parse_error_t const* added = 0;
+
+  ERR_REGION_BEGIN() {
+
+    error = cue_sheet_parse_error_alloc(line_num, line);
+    ERR_REGION_NULL_CHECK(error, err);
+
+    added = cue_sheet_parse_error_vector_push(self->errors, error);
+    ERR_REGION_NULL_CHECK(added, err);
+
+    self->has_errors = 1;
+
+    return added;
+
+  } ERR_REGION_END()
+
+  SAFE_FREE_HANDLER(error, cue_sheet_parse_error_free);
+
+  return NULL;
+
+}
+

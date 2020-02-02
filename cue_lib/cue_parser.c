@@ -11,6 +11,7 @@
 #include "file_line_reader.h"
 #include "line_writer.h"
 #include "file_line_writer.h"
+#include "cue_sheet_parse_result.h"
 
 static char const *skip_ws(char const *buf);
 static char const * skip_token(char const *buf, char const* token);
@@ -21,14 +22,15 @@ static char const* parse_int_token(char const* buf, int* number);
 static char const* parse_track_mode(char const* buf, cue_track_mode_t* mode);
 static char const* ctm2str(cue_track_mode_t mode);
 static char const* parse_time(char const* buf, cue_time_t *time);
+static void safe_add_error(cue_sheet_parse_result_t *result, size_t line_num, char const *line);
 
-cue_sheet_t* cue_sheet_parse_file(FILE* fid, struct cue_sheet_parse_result* out) {
+cue_sheet_t* cue_sheet_parse_file(FILE* fid, struct cue_sheet_parse_result* result_opt) {
   file_line_reader_t line_reader;
   file_line_reader_init_fid(&line_reader, fid);
-  return cue_sheet_parse(&line_reader.line_reader, out);
+  return cue_sheet_parse(&line_reader.line_reader, result_opt);
 }
 
-cue_sheet_t* cue_sheet_parse_filename(char const* filename, struct cue_sheet_parse_result* out) {
+cue_sheet_t* cue_sheet_parse_filename(char const* filename, struct cue_sheet_parse_result* result_opt) {
   FILE* cue_in;
   errno_t result = fopen_s(&cue_in, filename, "rb");
   if (!cue_in) {
@@ -36,17 +38,20 @@ cue_sheet_t* cue_sheet_parse_filename(char const* filename, struct cue_sheet_par
     return NULL;
   }
 
-  cue_sheet_t *sheet = cue_sheet_parse_file(cue_in, out);
+  cue_sheet_t *sheet = cue_sheet_parse_file(cue_in, result_opt);
 
   fclose(cue_in);
 
   return sheet;
 }
 
-cue_sheet_t* cue_sheet_parse(line_reader_i *reader, struct cue_sheet_parse_result* out) {
-  char const *line;
+#define LOG_AND_BREAK() { safe_add_error(result_opt, line_num, line); has_errors = 1; break; }
+
+cue_sheet_t* cue_sheet_parse(line_reader_i *reader, struct cue_sheet_parse_result* result_opt) {
+  char const *line = 0;
   size_t bytes;
-  int has_error = 0;
+  size_t line_num = 0;
+  short has_errors = 0;
 
   cue_sheet_t *sheet = cue_sheet_alloc();
   cue_file_t *curr_file = NULL;
@@ -54,6 +59,7 @@ cue_sheet_t* cue_sheet_parse(line_reader_i *reader, struct cue_sheet_parse_resul
 
   while (reader->read_line(reader, &line, &bytes) != EOF) {
     char const *parse = line;
+    ++line_num;
 
     // skip leading whitspace
     parse = skip_ws(parse);
@@ -67,11 +73,11 @@ cue_sheet_t* cue_sheet_parse(line_reader_i *reader, struct cue_sheet_parse_resul
 
         char *path = NULL, *end = NULL;
         parse = parse_path(parse, &path, &end);
-        if (!parse) break;
+        if (!parse) LOG_AND_BREAK();
 
         cue_file_type_t type;
         parse = parse_file_type(parse, &type);
-        if (!parse) break;
+        if (!parse) LOG_AND_BREAK();
 
         // got a whole file
         curr_file = cue_sheet_new_file(sheet);
@@ -82,18 +88,18 @@ cue_sheet_t* cue_sheet_parse(line_reader_i *reader, struct cue_sheet_parse_resul
 
       case 'T':
       {
-        if (!curr_file) break;
-
         parse = skip_token(parse, "TRACK");
         if (! parse) break;
 
+        if (!curr_file) LOG_AND_BREAK();
+
         int track;
         parse = parse_int_token(parse, &track);
-        if (! parse) break;
+        if (! parse) LOG_AND_BREAK();
 
         cue_track_mode_t mode;
         parse = parse_track_mode(parse, &mode);
-        if (! parse) break;
+        if (! parse) LOG_AND_BREAK();
 
         // got a whole track
         curr_track = cue_file_new_track(curr_file);
@@ -104,14 +110,14 @@ cue_sheet_t* cue_sheet_parse(line_reader_i *reader, struct cue_sheet_parse_resul
 
       case 'P':
       {
-        if (! curr_track) break;
-
         parse = skip_token(parse, "PREGAP");
         if (!parse) break;
 
+        if (!curr_track) LOG_AND_BREAK();
+
         cue_time_t time;
         parse = parse_time(parse, &time);
-        if (!parse) break;
+        if (!parse) LOG_AND_BREAK();
 
         // got a whole pregap
         curr_track->pregap = time;
@@ -120,18 +126,18 @@ cue_sheet_t* cue_sheet_parse(line_reader_i *reader, struct cue_sheet_parse_resul
 
       case 'I':
       {
-        if (!curr_track) break;
-
         parse = skip_token(parse, "INDEX");
         if (!parse) break;
 
+        if (!curr_track) break;
+
         int index;
         parse = parse_int_token(parse, &index);
-        if (!parse) break;
+        if (!parse) LOG_AND_BREAK();
 
         cue_time_t time;
         parse = parse_time(parse, &time);
-        if (!parse) break;
+        if (!parse) LOG_AND_BREAK();
 
         // got a whole index
         cue_index_t *curr_index = cue_track_new_index(curr_track);
@@ -150,7 +156,8 @@ cue_sheet_t* cue_sheet_parse(line_reader_i *reader, struct cue_sheet_parse_resul
 
   SAFE_FREE(line);
 
-  if (has_error) {
+  // check whether there was an error
+  if (has_errors) {
     cue_sheet_free(sheet);
     sheet = NULL;
   }
@@ -457,4 +464,10 @@ static char const* parse_time(char const* buf, cue_time_t* time) {
   }
 
   return next;
+}
+
+static void safe_add_error(cue_sheet_parse_result_t* result, size_t line_num, char const* line) {
+  if (! result) return;
+
+  cue_sheet_parse_result_add_error(result, line_num, line);
 }

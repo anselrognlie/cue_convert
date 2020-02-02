@@ -18,6 +18,7 @@ typedef struct cue_sheet_parse_error_vector {
 DECLARE_OBJECT_VECTOR(cue_sheet_parse_error_vector, cue_sheet_parse_error_t);
 
 typedef struct cue_sheet_parse_result {
+  short has_errors;
   cue_sheet_parse_error_vector_t* errors;
 } cue_sheet_parse_result_t;
 
@@ -34,3 +35,8 @@ struct cue_sheet_parse_result* cue_sheet_parse_result_alloc();
 errno_t cue_sheet_parse_result_init(struct cue_sheet_parse_result* self);
 void cue_sheet_parse_result_uninit(struct cue_sheet_parse_result* self);
 void cue_sheet_parse_result_free(struct cue_sheet_parse_result* self);
+
+struct cue_sheet_parse_error const* cue_sheet_parse_result_add_error(
+  struct cue_sheet_parse_result* self,
+  size_t line_num,
+  char const* line);
