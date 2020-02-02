@@ -27,6 +27,7 @@ int main(int argc, char const* argv[]) {
   result = test_cue() || result;
   result = test_cue_copy() || result;
   result = test_cue_transform() || result;
+  result = test_cue_errors() || result;
   result = test_list_dir() || result;
   result = test_traverse_dirs() || result;
   result = test_ensure_path() || result;

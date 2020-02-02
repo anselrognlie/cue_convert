@@ -129,7 +129,7 @@ cue_sheet_t* cue_sheet_parse(line_reader_i *reader, struct cue_sheet_parse_resul
         parse = skip_token(parse, "INDEX");
         if (!parse) break;
 
-        if (!curr_track) break;
+        if (!curr_track) LOG_AND_BREAK();
 
         int index;
         parse = parse_int_token(parse, &index);

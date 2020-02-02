@@ -4,6 +4,7 @@
 
 #include "cue_file.h"
 #include "cue_parser.h"
+#include "cue_sheet_parse_result.h"
 #include "cue_transform.h"
 #include "array_line_reader.h"
 #include "array_line_writer.h"
@@ -20,7 +21,29 @@
 static const char s_cue_src_dir[] = "..\\test_data\\cue_dir";
 static const char s_cue_trg_dir[] = "r:\\target_dir";
 
-static char const *s_cue_sheet[] = {
+static char const* s_cue_sheet[] = {
+"FILE \"track01.bin\" BINARY",
+"  TRACK 01 AUDIO",
+"    PREGAP 00:03:00",
+"    INDEX 01 00:00:00",
+"FILE track02.bin BINARY",
+"  TRACK 02 MODE1/2352",
+"    INDEX 01 00:03:00",
+"FILE \"track03.ogg\" OGG",
+"  TRACK 03 AUDIO",
+"    INDEX 01 00:00:00",
+"FILE \"track 04.mp3\" MP3",
+"  TRACK 04 AUDIO",
+"    INDEX 01 00:00:00",
+"FILE \"track05.wav\" WAV",
+"  TRACK 05 AUDIO",
+"    INDEX 01 00:00:00",
+"FILE \"track06.bin\" BINARY",
+"  TRACK 06 MODE1/2048",
+"    INDEX 01 00:00:00",
+};
+
+static char const* s_canonical_sheet[] = {
 "FILE \"track01.bin\" BINARY",
 "  TRACK 01 AUDIO",
 "    PREGAP 00:03:00",
@@ -31,7 +54,7 @@ static char const *s_cue_sheet[] = {
 "FILE \"track03.ogg\" OGG",
 "  TRACK 03 AUDIO",
 "    INDEX 01 00:00:00",
-"FILE \"track04.mp3\" MP3",
+"FILE \"track 04.mp3\" MP3",
 "  TRACK 04 AUDIO",
 "    INDEX 01 00:00:00",
 "FILE \"track05.wav\" WAV",
@@ -43,6 +66,7 @@ static char const *s_cue_sheet[] = {
 };
 
 static const int s_cue_sheet_num_lines = sizeof(s_cue_sheet) / sizeof(*s_cue_sheet);
+static const int s_canonical_sheet_num_lines = sizeof(s_canonical_sheet) / sizeof(*s_canonical_sheet);
 
 static char const* s_transformed_sheet[] = {
 "FILE \"track01.ogg\" OGG",
@@ -55,7 +79,7 @@ static char const* s_transformed_sheet[] = {
 "FILE \"track03.ogg\" OGG",
 "  TRACK 03 AUDIO",
 "    INDEX 01 00:00:00",
-"FILE \"track04.mp3\" MP3",
+"FILE \"track 04.mp3\" MP3",
 "  TRACK 04 AUDIO",
 "    INDEX 01 00:00:00",
 "FILE \"track05.ogg\" OGG",
@@ -66,7 +90,45 @@ static char const* s_transformed_sheet[] = {
 "    INDEX 01 00:00:00",
 };
 
+static char const* s_error_sheet[] = {
+"    PREGAP 00:03:00",  // 1
+"    INDEX 01 00:00:00",  // 2
+"  TRACK 01 AUDIO",  // 3
+"FILE \"track01.ogg\" OGG",  // 4
+"    PREGAP 00:03:00",  // 5
+"    INDEX 01 00:00:00",  // 6
+"  TRACK 01 BADTRACKTYPE",  // 7
+"  TRACK BADINDEX AUDIO",  // 8
+"  TRACK 01 AUDIO",  // 9
+"    PREGAP 00:BADTIME:00",  // 10
+"    INDEX 01 00:00:BADTIME",  // 11
+"    INDEX DABINDEX 00:00:00",  // 12
+"FILE \"track01.ogg\" BADFILETYPE",  // 13
+"FILE \"BADNAME OGG",  // 14
+};
+
+typedef struct {
+  size_t line_num;
+  char const *line;
+} error_test_record_t;
+
+static error_test_record_t s_error_test_result[] = {
+  { 1, "    PREGAP 00:03:00" },  // 1
+  { 2, "    INDEX 01 00:00:00" },  // 2
+  { 3, "  TRACK 01 AUDIO" },  // 3
+  { 5, "    PREGAP 00:03:00" },  // 5
+  { 6, "    INDEX 01 00:00:00" },  // 6
+  { 7, "  TRACK 01 BADTRACKTYPE" },  // 7
+  { 8, "  TRACK BADINDEX AUDIO" },  // 8
+  { 10, "    PREGAP 00:BADTIME:00" },  // 10
+  { 11, "    INDEX 01 00:00:BADTIME" },  // 11
+  { 12, "    INDEX DABINDEX 00:00:00" },  // 12
+  { 13, "FILE \"track01.ogg\" BADFILETYPE" },  // 13
+  { 14, "FILE \"BADNAME OGG" },  // 14
+};
+
 static const int s_transformed_sheet_num_lines = sizeof(s_transformed_sheet) / sizeof(*s_transformed_sheet);
+static const int s_error_sheet_num_lines = sizeof(s_error_test_result) / sizeof(*s_error_test_result);
 
 #define GET_SIZE(arr) (arr),sizeof((arr))/sizeof(*(arr))
 
@@ -88,7 +150,7 @@ errno_t test_cue(void) {
   cue_sheet_write(sheet, &writer.line_writer);
 
   errno_t result = 0;
-  if (compare_string_arrays(s_cue_sheet, s_cue_sheet_num_lines, writer.lines, writer.num_lines)) {
+  if (compare_string_arrays(s_canonical_sheet, s_canonical_sheet_num_lines, writer.lines, writer.num_lines)) {
     printf("passed.\n");
   }
   else {
@@ -127,7 +189,7 @@ errno_t test_cue_copy(void) {
   cue_sheet_write(copy, &writer.line_writer);
 
   errno_t result = 0;
-  if (compare_string_arrays(s_cue_sheet, s_cue_sheet_num_lines, writer.lines, writer.num_lines)) {
+  if (compare_string_arrays(s_canonical_sheet, s_canonical_sheet_num_lines, writer.lines, writer.num_lines)) {
     printf("passed.\n");
   }
   else {
@@ -184,6 +246,56 @@ errno_t test_cue_transform(void) {
   cue_sheet_free(sheet);
 
   return result;
+}
+
+static short compare_result_arrays(
+  cue_sheet_parse_result_t const* result,
+  error_test_record_t const *output,
+  size_t error_len) {
+
+  if (error_len > 0 && ! result->has_errors) return 0;
+
+  size_t result_len = cue_sheet_parse_error_vector_get_length(result->errors);
+  if (error_len != result_len) return 0;
+
+  for (size_t i = 0; i < error_len; ++i) {
+    error_test_record_t err_rec = output[i];
+    cue_sheet_parse_error_t const *res_rec = cue_sheet_parse_error_vector_get(result->errors, i);
+
+    if (err_rec.line_num != res_rec->line_num) return 0;
+    if (strcmp(err_rec.line, res_rec->line) != 0) return 0;
+  }
+
+  return 1;
+}
+
+errno_t test_cue_errors(void) {
+  errno_t err = 0;
+  cue_sheet_parse_result_t *result = 0;
+  array_line_reader_t reader;
+  cue_sheet_t* sheet = 0;
+
+  ERR_REGION_BEGIN() {
+
+    printf("Checking cue errors... ");
+
+    result = cue_sheet_parse_result_alloc();
+    ERR_REGION_NULL_CHECK(result, err);
+
+    array_line_reader_init_lines(&reader, GET_SIZE(s_error_sheet));
+    sheet = cue_sheet_parse(&reader.line_reader, result);
+    ERR_REGION_CMP_CHECK(sheet, err);
+
+    ERR_REGION_CMP_CHECK(! compare_result_arrays(result, s_error_test_result, s_error_sheet_num_lines), err);
+
+  } ERR_REGION_END()
+
+  printf("%s\n", err ? "FAILED!" : "passed.");
+
+  SAFE_FREE_HANDLER(sheet, cue_sheet_free);
+  SAFE_FREE_HANDLER(result, cue_sheet_parse_result_free);
+
+  return err;
 }
 
 typedef struct {

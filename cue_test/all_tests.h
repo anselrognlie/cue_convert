@@ -7,6 +7,7 @@ errno_t test_getline(void);
 errno_t test_cue(void);
 errno_t test_cue_copy(void);
 errno_t test_cue_transform(void);
+errno_t test_cue_errors(void);
 errno_t test_cue_traverse(void);
 errno_t test_list_dir(void);
 errno_t test_traverse_dirs(void);
