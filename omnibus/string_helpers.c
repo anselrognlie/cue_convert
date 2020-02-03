@@ -67,3 +67,16 @@ short cstr_ends_with(char const* cstr, char const* ending) {
   return strncmp(cstr + (cstr_len - ending_len), ending, ending_len) == 0;
 }
 
+char const* find_last_substring(char const* str, char const* substr) {
+  char const *curr_head = str;
+  char const *last_found = NULL;
+  char const *found = NULL;
+  size_t substr_len = strlen(substr);
+
+  while (found = strstr(curr_head, substr)) {
+    last_found = found;
+    curr_head = last_found + substr_len;
+  }
+
+  return last_found;
+}

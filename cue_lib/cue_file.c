@@ -217,7 +217,7 @@ void cue_track_init(cue_track_t* self) {
   self->index = malloc(0);
 }
 
-short cue_track_has_pregap(cue_track_t* self) {
+short cue_track_has_pregap(cue_track_t const* self) {
   return (self->pregap.minutes + self->pregap.seconds + self->pregap.frames != 0);
 }
 

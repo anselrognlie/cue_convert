@@ -22,3 +22,5 @@ typedef struct path_enumerator {
 } path_enumerator_i;
 
 path_enumerator_i* enumerate_path(char const* path);
+char const* path_dir_part(char const* path);
+char const* path_file_part(char const* path);

@@ -10,10 +10,18 @@
 #include "mem_helpers.h"
 #include "cue_traverse_report.h"
 #include "cue_traverse_record.h"
+#include "cue_parser.h"
+#include "cue_file.h"
+#include "cue_sheet_parse_result.h"
+#include "cue_transform.h"
+#include "path.h"
+#include "file_line_writer.h"
 
 static char * make_path_with_history(char_vector_t const* root_path, string_vector_t const* history);
 static char * make_simple_path(char const *directory, char const*filename);
 static short is_cue_file(char const *filename);
+static errno_t convert_record(cue_traverse_record_t *record, cue_traverse_visitor_t *visitor);
+static errno_t write_cue(cue_sheet_t *cue, char const *path, cue_sheet_parse_result_t *result);
 
 //
 // cue traversal visitor
@@ -56,7 +64,7 @@ static short ctv_visit(directory_traversal_handler_i* self_i, directory_traversa
       SAFE_FREE(src_path);
 
       // try to convert
-      transformed = 1;
+      transformed = convert_record(record, self) == 0;
 
       // add the appropriate report category
       added = cue_traverse_report_add_record(report, record, transformed);
@@ -67,13 +75,9 @@ static short ctv_visit(directory_traversal_handler_i* self_i, directory_traversa
 
   } ERR_REGION_END()
 
-  if (record) {
-    SAFE_FREE_HANDLER(record, cue_traverse_record_free);
-  }
-  else {
-    SAFE_FREE(dst_path);
-    SAFE_FREE(src_path);
-  }
+  SAFE_FREE_HANDLER(record, cue_traverse_record_free);
+  SAFE_FREE(dst_path);
+  SAFE_FREE(src_path);
 
   return keep_traversing;
 }
@@ -169,4 +173,60 @@ static const char s_cue_suffix[] = ".cue";
 
 static short is_cue_file(char const* filename) {
   return cstr_ends_with(filename, s_cue_suffix);
+}
+
+static errno_t convert_record(cue_traverse_record_t* record, cue_traverse_visitor_t* visitor) {
+  errno_t err = 0;
+  cue_sheet_t* src = 0;
+  cue_sheet_t* converted = 0;
+  char_vector_t* src_path = record->source_path;
+  char_vector_t* trg_path = record->target_path;
+
+  ERR_REGION_BEGIN() {
+    // try to load the source cue
+    src = cue_sheet_parse_filename(src_path->get_str(src_path), record->result);
+    ERR_REGION_NULL_CHECK(src, err);
+
+    cue_sheet_t* local_src = src;
+    src = NULL;
+    record->source_sheet = local_src;
+
+    // try to convert it
+    cue_transform_audio_options_t options;
+    options.target_type = EWC_CAT_OGG;
+    converted = cue_sheet_transform_audio(local_src, &options);
+    ERR_REGION_NULL_CHECK(converted, err);
+
+    cue_sheet_t* local_converted = converted;
+    converted = NULL;
+    record->target_sheet = local_converted;
+
+    // if we are actually running, try to write the converted cue
+    if (visitor->execute) {
+      ERR_REGION_ERROR_CHECK(write_cue(converted, trg_path->get_str(trg_path), record->result), err);
+    }
+
+  } ERR_REGION_END()
+
+  return err;
+}
+
+static errno_t write_cue(cue_sheet_t* cue, char const* path, cue_sheet_parse_result_t* result) {
+  errno_t err = 0;
+  char const *dir = 0;
+  file_line_writer_t *writer = 0;
+
+  ERR_REGION_BEGIN() {
+
+    dir = path_dir_part(path);
+    ERR_REGION_NULL_CHECK(dir, err);
+
+    // ensure that the target directory exists
+    ERR_REGION_ERROR_CHECK(ensure_dir(dir), err);
+
+    // create a writer for the desired file
+    
+  } ERR_REGION_END()
+
+  return 0;
 }

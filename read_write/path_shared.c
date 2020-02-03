@@ -6,6 +6,8 @@
 #include <stddef.h>
 
 #include "mem_helpers.h"
+#include "filesystem.h"
+#include "string_helpers.h"
 
 static char const s_current_dir[] = ".";
 static const size_t s_current_dir_len = sizeof(s_current_dir) / sizeof(*s_current_dir) - 1;
@@ -142,3 +144,48 @@ errno_t ps_next_path_enumeration(ps_path_enumerator_t* self) {
   return 0;
 }
 
+char const* path_dir_part(char const* path) {
+  // find the last separator
+  char const *sep = find_last_substring(path, k_path_separator);
+
+  if (!sep)
+  {
+    // if no separator, the whole thing is the directory
+    return _strdup(path);
+  }
+
+  // otherwise return the first part
+  size_t len = sep - path;
+  char *dir = malloc(len + 1);
+  if (! dir) return NULL;
+  strncpy_s(dir, len + 1, path, len);
+  dir[len] = 0;
+
+  return dir;
+}
+
+char const* path_file_part(char const* path) {
+  // find the last separator
+  size_t sep_len = strlen(k_path_separator);
+  char const* sep = find_last_substring(path, k_path_separator);
+
+  if (!sep)
+  {
+    // if no separator, return the empty string
+    return _strdup("");
+  }
+
+  // move the ptr beyond the separator
+  sep += sep_len;
+
+  // otherwise return the last part
+  size_t total_len = strlen(path);
+  size_t dir_len = sep - path;
+  size_t file_len = total_len - dir_len;
+  char* file = malloc(file_len + 1);
+  if (!file) return NULL;
+  strncpy_s(file, file_len + 1, sep, file_len);
+  file[file_len] = 0;
+
+  return file;
+}

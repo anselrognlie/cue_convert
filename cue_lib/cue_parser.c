@@ -12,6 +12,7 @@
 #include "line_writer.h"
 #include "file_line_writer.h"
 #include "cue_sheet_parse_result.h"
+#include "err_helpers.h"
 
 static char const *skip_ws(char const *buf);
 static char const * skip_token(char const *buf, char const* token);
@@ -170,60 +171,117 @@ static const char s_track_line_format[] = "  TRACK %02d %s";
 static const char s_pregap_line_format[] = "    PREGAP %02d:%02d:%02d";
 static const char s_index_line_format[] = "    INDEX %02d %02d:%02d:%02d";
 
-void cue_sheet_write(struct cue_sheet* sheet, line_writer_i * writer) {
-  char *buf = NULL;
+static errno_t cue_sheet_write_indexes(cue_index_t const* indexes, short num_indexes, line_writer_i* writer) {
+  char* buf = NULL;
+  size_t written = 0;
+  errno_t err = 0;
 
-  for (int i = 0; i < sheet->num_files; ++i) {
-    cue_file_t* file = sheet->file[i];
-    buf = msnprintf(s_file_line_format, file->filename, cft2str(file->type));
-    if (! buf) return;
-    writer->write_line(writer->self, buf);
-    SAFE_FREE(buf);
+  for (int k = 0; k < num_indexes; ++k) {
+    ERR_REGION_BEGIN() {
+      cue_index_t index = indexes[k];
+      buf = msnprintf(s_index_line_format, index.index,
+        index.timestamp.minutes, index.timestamp.seconds, index.timestamp.frames);
+      ERR_REGION_NULL_CHECK(buf, err);
 
-    for (int j = 0; j < file->num_tracks; ++j) {
-      cue_track_t* track = file->track[j];
+      written = writer->write_line(writer->self, buf);
+      ERR_REGION_CMP_CHECK(!written && *buf, err);
+
+      SAFE_FREE(buf);
+    } ERR_REGION_END()
+
+    if (err) break;
+  }
+
+  SAFE_FREE(buf);
+
+  return err;
+}
+
+static errno_t cue_sheet_write_tracks(cue_track_t const** tracks, short num_tracks, line_writer_i* writer) {
+  char* buf = NULL;
+  size_t written = 0;
+  errno_t err = 0;
+
+  for (int j = 0; j < num_tracks; ++j) {
+    ERR_REGION_BEGIN() {
+      cue_track_t const* track = tracks[j];
       buf = msnprintf(s_track_line_format, track->track, ctm2str(track->mode));
-      if (!buf) return;
-      writer->write_line(writer->self, buf);
+      ERR_REGION_NULL_CHECK(buf, err);
+
+      written = writer->write_line(writer->self, buf);
+      ERR_REGION_CMP_CHECK(!written && *buf, err);
+
       SAFE_FREE(buf);
 
       if (cue_track_has_pregap(track)) {
         buf = msnprintf(s_pregap_line_format,
           track->pregap.minutes, track->pregap.seconds, track->pregap.frames);
-        if (!buf) return;
-        writer->write_line(writer->self, buf);
+        ERR_REGION_NULL_CHECK(buf, err);
+
+        written = writer->write_line(writer->self, buf);
+        ERR_REGION_CMP_CHECK(!written && *buf, err);
+
         SAFE_FREE(buf);
       }
 
-      for (int k = 0; k < track->num_indexes; ++k) {
-        cue_index_t index = track->index[k];
-        buf = msnprintf(s_index_line_format, index.index,
-          index.timestamp.minutes, index.timestamp.seconds, index.timestamp.frames);
-        if (!buf) return;
-        writer->write_line(writer->self, buf);
-        SAFE_FREE(buf);
-      }
-    }
+      ERR_REGION_ERROR_CHECK(cue_sheet_write_indexes(track->index, track->num_indexes, writer), err);
+
+    } ERR_REGION_END()
+
+    if (err) break;
   }
+
+  SAFE_FREE(buf);
+
+  return err;
 }
 
-void cue_sheet_write_file(cue_sheet_t* sheet, FILE* fid) {
+errno_t cue_sheet_write(struct cue_sheet* sheet, line_writer_i * writer) {
+  char *buf = NULL;
+  size_t written = 0;
+  errno_t err = 0;
+
+  for (int i = 0; i < sheet->num_files; ++i) {
+    ERR_REGION_BEGIN() {
+      cue_file_t* file = sheet->file[i];
+      buf = msnprintf(s_file_line_format, file->filename, cft2str(file->type));
+      ERR_REGION_NULL_CHECK(buf, err);
+
+      written = writer->write_line(writer->self, buf);
+      ERR_REGION_CMP_CHECK(!written && *buf, err);
+
+      SAFE_FREE(buf);
+
+      ERR_REGION_ERROR_CHECK(cue_sheet_write_tracks(file->track, file->num_tracks, writer), err);
+    } ERR_REGION_END()
+
+    if (err) break;
+  }
+
+  SAFE_FREE(buf);
+
+  return err;
+}
+
+errno_t cue_sheet_write_file(cue_sheet_t* sheet, FILE* fid) {
   file_line_writer_t line_writer;
   file_line_writer_init_fid(&line_writer, fid);
-  cue_sheet_write(sheet, &line_writer.line_writer);
+  return cue_sheet_write(sheet, &line_writer.line_writer);
 }
 
-void cue_sheet_write_filename(cue_sheet_t* sheet, char const *filename) {
+errno_t cue_sheet_write_filename(cue_sheet_t* sheet, char const *filename) {
   FILE* cue_out;
   errno_t result = fopen_s(&cue_out, filename, "wb");
   if (!cue_out) {
     fprintf(stderr, "unable to open file: %s\n", filename);
-    return;
+    return -1;
   }
 
-  cue_sheet_write_file(sheet, cue_out);
+  result = cue_sheet_write_file(sheet, cue_out);
 
   fclose(cue_out);
+
+  return result;
 }
 
 //

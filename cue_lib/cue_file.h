@@ -65,7 +65,7 @@ void cue_file_free(cue_file_t* self);
 
 cue_track_t *cue_track_alloc(void);
 void cue_track_init(cue_track_t* self);
-short cue_track_has_pregap(cue_track_t *self);
+short cue_track_has_pregap(cue_track_t const *self);
 cue_index_t* cue_track_new_index(cue_track_t* self);
 void cue_track_copy_from(cue_track_t *dest, cue_track_t const *src);
 void cue_track_uninit(cue_track_t* self);

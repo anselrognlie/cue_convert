@@ -6,6 +6,7 @@
 #include "char_vector.h"
 #include "cue_file.h"
 #include "mem_helpers.h"
+#include "cue_sheet_parse_result.h"
 
 static void* acquire(void const* instance);
 static void release(void* instance);
@@ -92,10 +93,13 @@ errno_t cue_traverse_record_init(cue_traverse_record_t* self) {
     ERR_REGION_NULL_CHECK(self->target_path, err);
     self->source_path = char_vector_alloc();
     ERR_REGION_NULL_CHECK(self->source_path, err);
+    self->result = cue_sheet_parse_result_alloc();
+    ERR_REGION_NULL_CHECK(self->result, err);
 
     return err;
   } ERR_REGION_END()
 
+  SAFE_FREE_HANDLER(self->result, cue_sheet_parse_result_free);
   SAFE_FREE_HANDLER(self->source_path, char_vector_free);
   SAFE_FREE_HANDLER(self->target_path, char_vector_free);
 
@@ -170,6 +174,7 @@ errno_t cue_traverse_record_copy_from(cue_traverse_record_t* self, cue_traverse_
 }
 
 errno_t cue_traverse_record_uninit(cue_traverse_record_t* self) {
+  SAFE_FREE_HANDLER(self->result, cue_sheet_parse_result_free);
   SAFE_FREE_HANDLER(self->target_sheet, cue_sheet_free);
   SAFE_FREE_HANDLER(self->source_sheet, cue_sheet_free);
   SAFE_FREE_HANDLER(self->source_path, char_vector_free);

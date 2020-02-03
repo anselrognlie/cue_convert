@@ -8,7 +8,7 @@
 
 // array of source types that we can convert to a target option
 static const short s_types_allowed_for_target[EWC_CAT_LAST][EWC_CFT_LAST] = {
-  { 1, 1, 0, 0 },  // EWC_CAT_OGG -> BINARY, WAV, !MP#, !OGG
+  { 1, 1, 0, 0 },  // EWC_CAT_OGG -> BINARY, WAV, !MP3, !OGG
 };
 
 // array of file types given the target conversion type
