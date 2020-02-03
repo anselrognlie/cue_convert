@@ -14,12 +14,14 @@
 #include "cue_traverse_report_writer.h"
 #include "cue_traverse_record.h"
 #include "char_vector.h"
+#include "filesystem.h"
 
 #include "test_helpers.h"
 #include "err_helpers.h"
+#include "test_visitors.h"
 
 static const char s_cue_src_dir[] = "..\\test_data\\cue_dir";
-static const char s_cue_trg_dir[] = "r:\\target_dir";
+static const char s_cue_trg_dir[] = "..\\test_data\\new_cue_dir";
 
 static char const* s_cue_sheet[] = {
 "FILE \"track01.bin\" BINARY",
@@ -305,8 +307,8 @@ typedef struct {
 } conversion_rec_t;
 
 static conversion_rec_t s_traverse_transformed[] = {
-  { "..\\test_data\\cue_dir\\a\\a1game\\a1game.cue", "r:\\target_dir\\a\\a1game\\a1game.cue" },
-  { "..\\test_data\\cue_dir\\b\\b2game\\b2game.cue", "r:\\target_dir\\b\\b2game\\b2game.cue" },
+  { "..\\test_data\\cue_dir\\a\\a1game\\a1game.cue", "..\\test_data\\new_cue_dir\\a\\a1game\\a1game.cue" },
+  { "..\\test_data\\cue_dir\\b\\b2game\\b2game.cue", "..\\test_data\\new_cue_dir\\b\\b2game\\b2game.cue" },
   0,
 };
 
@@ -321,6 +323,18 @@ static conversion_recs_t s_traverse_results = {
   (conversion_rec_t const*)&s_traverse_transformed,
   (conversion_rec_t const*)&s_traverse_failed,
 };
+
+static const dir_entry_fields_t s_test_traverse_result[] = {
+  {"a", 1},
+  {"a1game", 1},
+  {"a1game.cue", 0},
+  {"b", 1},
+  {"b2game", 1},
+  {"b2game.cue", 0},
+};
+
+static const size_t s_test_traverse_result_len =
+sizeof(s_test_traverse_result) / sizeof(*s_test_traverse_result);
 
 static short compare_record_lists(
   cue_traverse_record_vector_t* report_recs,
@@ -375,12 +389,14 @@ static errno_t compare_report(cue_traverse_report_t* report, conversion_recs_t c
   return err;
 }
 
+//#define PRINT_REPORT
+
 errno_t test_cue_traverse(void) {
   cue_traverse_visitor_t visitor;
   cue_traverse_report_writer_t writer;
   array_line_writer_t line_writer;
+  compare_visitor_t cv;
   errno_t err = 0;
-  short passed = 0;
 
   printf("Checking cue traversal... ");
 
@@ -395,7 +411,7 @@ errno_t test_cue_traverse(void) {
       s_cue_trg_dir, 
       s_cue_src_dir, 
       1, 
-      0), err);
+      1), err);
 
     traverse_dir_path(s_cue_src_dir, &visitor.handler_i);
 
@@ -405,16 +421,21 @@ errno_t test_cue_traverse(void) {
 
     ERR_REGION_ERROR_CHECK(cue_traverse_report_writer_write(&writer, report), err);
 
-    passed = 1;
+    // make sure the expected directory structure exists
+    compare_visitor_init(&cv, s_test_traverse_result, s_test_traverse_result_len);
+    traverse_dir_path(s_cue_trg_dir, &cv.handler_i);
+    ERR_REGION_CMP_CHECK(cv.line != s_test_traverse_result_len, err);
+
+    // cleanup the result directory
+    ERR_REGION_ERROR_CHECK(delete_dir(s_cue_trg_dir), err);
 
   } ERR_REGION_END()
 
-  printf("%s\n", passed ? "passed." : "FAILED!");
+  printf("%s\n", err ? "FAILED!" : "passed.");
 
-  int n = line_writer.num_lines;
-  for (int i = 0; i < n; ++i) {
-    printf("%s\n", line_writer.lines[i]);
-  }
+#ifdef PRINT_REPORT
+  dump_string_array(line_writer.lines, line_writer.num_lines);
+#endif
 
   cue_traverse_report_writer_uninit(&writer);
   cue_traverse_visitor_uninit(&visitor);

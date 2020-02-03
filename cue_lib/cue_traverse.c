@@ -203,7 +203,7 @@ static errno_t convert_record(cue_traverse_record_t* record, cue_traverse_visito
 
     // if we are actually running, try to write the converted cue
     if (visitor->execute) {
-      ERR_REGION_ERROR_CHECK(write_cue(converted, trg_path->get_str(trg_path), record->result), err);
+      ERR_REGION_ERROR_CHECK(write_cue(local_converted, trg_path->get_str(trg_path), record->result), err);
     }
 
   } ERR_REGION_END()
@@ -214,7 +214,6 @@ static errno_t convert_record(cue_traverse_record_t* record, cue_traverse_visito
 static errno_t write_cue(cue_sheet_t* cue, char const* path, cue_sheet_parse_result_t* result) {
   errno_t err = 0;
   char const *dir = 0;
-  file_line_writer_t *writer = 0;
 
   ERR_REGION_BEGIN() {
 
@@ -225,8 +224,11 @@ static errno_t write_cue(cue_sheet_t* cue, char const* path, cue_sheet_parse_res
     ERR_REGION_ERROR_CHECK(ensure_dir(dir), err);
 
     // create a writer for the desired file
+    ERR_REGION_ERROR_CHECK(cue_sheet_write_filename(cue, path), err);
     
   } ERR_REGION_END()
+
+  SAFE_FREE(dir);
 
   return 0;
 }

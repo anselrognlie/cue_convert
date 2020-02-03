@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="all_tests.h" />
     <ClInclude Include="test_helpers.h" />
+    <ClInclude Include="test_visitors.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.c" />
@@ -29,6 +30,7 @@
     <ClCompile Include="test_helpers.c" />
     <ClCompile Include="test_dirs.c" />
     <ClCompile Include="test_vector.c" />
+    <ClCompile Include="test_visitors.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
