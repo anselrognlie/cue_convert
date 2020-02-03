@@ -247,5 +247,5 @@ static errno_t write_cue(cue_sheet_t* cue, char const* path, cue_sheet_parse_res
 
   SAFE_FREE(dir);
 
-  return 0;
+  return err;
 }

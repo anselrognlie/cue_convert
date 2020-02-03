@@ -20,7 +20,9 @@
 
 //#define PRINT_ONLY
 
-char const* k_path_separator = "\\";
+#define PATH_SEPARATOR_CHAR '\\'
+const char k_path_separator_char = PATH_SEPARATOR_CHAR;
+const char k_path_separator[] = { PATH_SEPARATOR_CHAR, 0 };
 
 static char const s_path_wildcard[] = "\\*";
 static const size_t s_path_wildcard_len = sizeof(s_path_wildcard) - 1;
@@ -335,35 +337,36 @@ static errno_t create_directory(char const* path) {
 }
 
 errno_t ensure_dir(char const* path) {
-  errno_t result = 0;
+  errno_t err = 0;
+  char *buf = 0;
+  path_enumerator_i* i = 0;
 
-  size_t path_len = strlen(path);
-  char* buf = malloc(path_len + 1);
-  if (! buf) return -1;
+  ERR_REGION_BEGIN() {
+    size_t path_len = strlen(path);
+    buf = malloc(path_len + 1);
+    ERR_REGION_NULL_CHECK(buf, err);
+    memset(buf, 0, path_len + 1);
 
-  // enumerate the path
-  path_enumerator_i *i = enumerate_path(path);
-  if (!i) {
-    free(buf);
-    return -1;
-  }
+    // enumerate the path
+    i = enumerate_path(path);
+    ERR_REGION_NULL_CHECK(i, err);
 
-  memset(buf, 0, path_len + 1);
+    // check that each point has a directory created
+    while (i->has_next(i) && !err) {
+      path_enumerate_status_t status = i->next(i);
+      size_t full_path_len = status.path_end - status.full_path_start;
+      memmove_s(buf, path_len + 1, status.full_path_start, full_path_len);
+      *(buf + full_path_len) = 0;
 
-  // check that each point has a directory created
-  while (i->has_next(i) && ! result) {
-    path_enumerate_status_t status = i->next(i);
-    size_t full_path_len = status.path_end - status.full_path_start;
-    memmove_s(buf, path_len + 1, status.full_path_start, full_path_len);
-    *(buf + full_path_len) = 0;
+      err = create_directory(buf);
+    }
 
-    result = create_directory(buf);
-  }
+  } ERR_REGION_END()
 
-  i->dispose(i);
-  free(buf);
+  if (i) i->dispose(i);
+  SAFE_FREE(buf);
 
-  return result;
+  return err;
 }
 
 short file_exists(char const* path) {

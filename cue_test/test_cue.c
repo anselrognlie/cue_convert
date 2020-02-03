@@ -417,9 +417,9 @@ errno_t test_cue_traverse(void) {
 
     cue_traverse_report_t *report = visitor.report;
 
-    ERR_REGION_ERROR_CHECK(compare_report(report, &s_traverse_results), err);
-
     ERR_REGION_ERROR_CHECK(cue_traverse_report_writer_write(&writer, report), err);
+
+    ERR_REGION_ERROR_CHECK(compare_report(report, &s_traverse_results), err);
 
     // make sure the expected directory structure exists
     compare_visitor_init(&cv, s_test_traverse_result, s_test_traverse_result_len);

@@ -12,6 +12,7 @@
 #include <stddef.h>
 
 #include "mem_helpers.h"
+#include "filesystem.h"
 
 errno_t ps_path_enumerator_init(struct ps_path_enumerator* self, const char* path);
 errno_t ps_start_path_enumeration(ps_path_enumerator_t* self);
@@ -75,7 +76,7 @@ path_enumerator_i* enumerate_path(char const* path) {
   }
 
   enumerator->shared.enum_i.self = enumerator;
-  enumerator->shared.path_separator = '\\';
+  enumerator->shared.path_separator = k_path_separator_char;
   enumerator->shared.rules = fs_path_enumerator_rules_alloc();
 
   ps_start_path_enumeration(&enumerator->shared);

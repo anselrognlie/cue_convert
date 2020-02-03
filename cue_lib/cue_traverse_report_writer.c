@@ -42,7 +42,7 @@ errno_t cue_traverse_report_writer_write(
 
   line_writer_i *writer = self->writer;
   errno_t err = 0;
-  size_t written = 0;
+  size_t written = 1;
 
   ERR_REGION_BEGIN() {
 
