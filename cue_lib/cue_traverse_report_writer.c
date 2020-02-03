@@ -4,6 +4,7 @@
 
 #include "cue_traverse_report.h"
 #include "cue_traverse_record.h"
+#include "cue_sheet_parse_result.h"
 #include "char_vector.h"
 #include "line_writer.h"
 #include "err_helpers.h"
@@ -66,8 +67,31 @@ errno_t cue_traverse_report_writer_write(
       char const* src_path = record->source_path->get_str(record->source_path);
       char const* dst_path = record->target_path->get_str(record->target_path);
       written = line_writer_write_fmt(writer, "%s%s%s%s", "  ", src_path, " -> ", dst_path);
-      if (!written) break;
+      if (!written) break;  // break out of record loop
+
+      if (record->result->has_errors) {
+        written = line_writer_write_fmt(writer, "%s%s", "    ", "Errors:");
+        if (!written) break;  // break out of record loop
+
+        cue_sheet_parse_error_vector_t* errors = record->result->errors;
+        for (size_t j = 0; j < errors->get_length(errors); ++j) {
+          cue_sheet_parse_error_t const *error = errors->get(errors, j);
+          if (error->line_num) {
+            written = line_writer_write_fmt(writer, "%s%d%s%s", "      ",
+              error->line_num, ": ", error->line);
+          }
+          else
+          {
+            written = line_writer_write_fmt(writer, "%s%s%s%s", "      ",
+              "*", " ", error->line);
+          }
+          if (!written) break;  // break out of error loop
+        }
+        if (!written) break;  // break out of record loop
+      }
     }
+
+    // translate an early breakout into an error
     ERR_REGION_CMP_CHECK(!written, err);
 
     ERR_REGION_CMP_CHECK(!line_writer_write_fmt(writer, "%s%d", "Failed total: ", report->failed_cue_count), err);

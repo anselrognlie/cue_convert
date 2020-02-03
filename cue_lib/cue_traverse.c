@@ -16,6 +16,7 @@
 #include "cue_transform.h"
 #include "path.h"
 #include "file_line_writer.h"
+#include "format_helpers.h"
 
 static char * make_path_with_history(char_vector_t const* root_path, string_vector_t const* history);
 static char * make_simple_path(char const *directory, char const*filename);
@@ -181,6 +182,7 @@ static errno_t convert_record(cue_traverse_record_t* record, cue_traverse_visito
   cue_sheet_t* converted = 0;
   char_vector_t* src_path = record->source_path;
   char_vector_t* trg_path = record->target_path;
+  char *buf = 0;
 
   ERR_REGION_BEGIN() {
     // try to load the source cue
@@ -203,10 +205,25 @@ static errno_t convert_record(cue_traverse_record_t* record, cue_traverse_visito
 
     // if we are actually running, try to write the converted cue
     if (visitor->execute) {
-      ERR_REGION_ERROR_CHECK(write_cue(local_converted, trg_path->get_str(trg_path), record->result), err);
+      errno_t write_err;
+      char const *trg_path_cstr = trg_path->get_str(trg_path);
+      write_err = write_cue(local_converted, trg_path_cstr, record->result);
+
+      // if there was an error creating the cue, log it here as a line 0 error
+      if (write_err) {
+        buf = msnprintf("Failed to create cue file: %s", trg_path_cstr);
+        ERR_REGION_NULL_CHECK(buf, err);
+
+        ERR_REGION_NULL_CHECK(cue_sheet_parse_result_add_error(record->result, 0, buf), err);
+        SAFE_FREE(buf);
+      }
+
+      ERR_REGION_ERROR_CHECK(write_err, err);
     }
 
   } ERR_REGION_END()
+
+  SAFE_FREE(buf);
 
   return err;
 }
