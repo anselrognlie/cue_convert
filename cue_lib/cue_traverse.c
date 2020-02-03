@@ -86,8 +86,7 @@ static short ctv_visit(directory_traversal_handler_i* self_i, directory_traversa
 errno_t cue_traverse_visitor_init(cue_traverse_visitor_t* self,
   char const* target_path,
   char const* source_path,
-  short generate_report,
-  short execute) {
+  short report_only) {
 
   errno_t err = 0;
 
@@ -99,8 +98,7 @@ errno_t cue_traverse_visitor_init(cue_traverse_visitor_t* self,
     memset(self, 0, sizeof(*self));
     self->handler_i.self = self;
     self->handler_i.visit = ctv_visit;
-    self->generate_report = generate_report;
-    self->execute = execute;
+    self->report_only = report_only;
 
     target_path_str = char_vector_alloc();
     ERR_REGION_NULL_CHECK(target_path_str, err);
@@ -204,7 +202,7 @@ static errno_t convert_record(cue_traverse_record_t* record, cue_traverse_visito
     record->target_sheet = local_converted;
 
     // if we are actually running, try to write the converted cue
-    if (visitor->execute) {
+    if (!visitor->report_only) {
       errno_t write_err;
       char const *trg_path_cstr = trg_path->get_str(trg_path);
       write_err = write_cue(local_converted, trg_path_cstr, record->result);

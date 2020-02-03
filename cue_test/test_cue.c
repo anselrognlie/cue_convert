@@ -406,12 +406,12 @@ errno_t test_cue_traverse(void) {
       &writer,
       &line_writer.line_writer), err);
 
+    short report_only = 0;
     ERR_REGION_ERROR_CHECK(cue_traverse_visitor_init(
       &visitor, 
       s_cue_trg_dir, 
       s_cue_src_dir, 
-      1, 
-      1), err);
+      report_only), err);
 
     traverse_dir_path(s_cue_src_dir, &visitor.handler_i);
 
