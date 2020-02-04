@@ -26,6 +26,7 @@ errno_t delete_file(char const* path);
 errno_t delete_dir(char const* path);
 errno_t ensure_dir(char const* path);
 short file_exists(char const* path);
+errno_t copy_file(char const* src, char const *dst);
 
 extern const char k_path_separator[];
 extern const char k_path_separator_char;

@@ -236,7 +236,7 @@ static errno_t cue_sheet_write_tracks(cue_track_t const** tracks, short num_trac
   return err;
 }
 
-errno_t cue_sheet_write(struct cue_sheet* sheet, line_writer_i * writer) {
+errno_t cue_sheet_write(struct cue_sheet const* sheet, line_writer_i * writer) {
   char *buf = NULL;
   size_t written = 0;
   errno_t err = 0;
@@ -263,13 +263,13 @@ errno_t cue_sheet_write(struct cue_sheet* sheet, line_writer_i * writer) {
   return err;
 }
 
-errno_t cue_sheet_write_file(cue_sheet_t* sheet, FILE* fid) {
+errno_t cue_sheet_write_file(cue_sheet_t const* sheet, FILE* fid) {
   file_line_writer_t line_writer;
   file_line_writer_init_fid(&line_writer, fid);
   return cue_sheet_write(sheet, &line_writer.line_writer);
 }
 
-errno_t cue_sheet_write_filename(cue_sheet_t* sheet, char const *filename) {
+errno_t cue_sheet_write_filename(cue_sheet_t const* sheet, char const *filename) {
   FILE* cue_out;
   errno_t result = fopen_s(&cue_out, filename, "wb");
   if (!cue_out) {

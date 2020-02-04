@@ -328,9 +328,19 @@ static const dir_entry_fields_t s_test_traverse_result[] = {
   {"a", 1},
   {"a1game", 1},
   {"a1game.cue", 0},
+  {"track01.ogg", 0},
+  {"track02.bin", 0},
+  {"track03.ogg", 0},
+  {"track04.ogg", 0},
+  {"track05.mp3", 0},
   {"b", 1},
   {"b2game", 1},
   {"b2game.cue", 0},
+  {"track01.ogg", 0},
+  {"track02.bin", 0},
+  {"track03.ogg", 0},
+  {"track04.ogg", 0},
+  {"track05.mp3", 0},
 };
 
 static const size_t s_test_traverse_result_len =
@@ -345,13 +355,13 @@ static short compare_record_lists(
     cue_traverse_record_t const* record = report_recs->get(report_recs, i);
 
     char const *rec, *test;
-    rec = record->source_path->get_str(record->source_path);
+    rec = record->source_path;
     test = test_recs[i].src;
     if (!test) { match = 0; break; }
     match = strcmp(rec, test) == 0;
     if (!match) break;
 
-    rec = record->target_path->get_str(record->target_path);
+    rec = record->target_path;
     test = test_recs[i].dst;
     if (!test) { match = 0; break; }
     match = strcmp(rec, test) == 0;
@@ -426,9 +436,6 @@ errno_t test_cue_traverse(void) {
     traverse_dir_path(s_cue_trg_dir, &cv.handler_i);
     ERR_REGION_CMP_CHECK(cv.line != s_test_traverse_result_len, err);
 
-    // cleanup the result directory
-    ERR_REGION_ERROR_CHECK(delete_dir(s_cue_trg_dir), err);
-
   } ERR_REGION_END()
 
   printf("%s\n", err ? "FAILED!" : "passed.");
@@ -437,6 +444,7 @@ errno_t test_cue_traverse(void) {
   dump_string_array(line_writer.lines, line_writer.num_lines);
 #endif
 
+  delete_dir(s_cue_trg_dir);
   cue_traverse_report_writer_uninit(&writer);
   cue_traverse_visitor_uninit(&visitor);
   array_line_writer_uninit(&line_writer);

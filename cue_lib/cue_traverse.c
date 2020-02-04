@@ -22,7 +22,9 @@ static char * make_path_with_history(char_vector_t const* root_path, string_vect
 static char * make_simple_path(char const *directory, char const*filename);
 static short is_cue_file(char const *filename);
 static errno_t convert_record(cue_traverse_record_t *record, cue_traverse_visitor_t *visitor);
-static errno_t write_cue(cue_sheet_t *cue, char const *path, cue_sheet_parse_result_t *result);
+static errno_t write_transformed_cue(cue_traverse_record_t* record);
+static errno_t process_track_files(cue_traverse_record_t* record);
+static errno_t convert_file(char const *src_path, char const *trg_path);
 
 //
 // cue traversal visitor
@@ -178,13 +180,13 @@ static errno_t convert_record(cue_traverse_record_t* record, cue_traverse_visito
   errno_t err = 0;
   cue_sheet_t* src = 0;
   cue_sheet_t* converted = 0;
-  char_vector_t* src_path = record->source_path;
-  char_vector_t* trg_path = record->target_path;
+  char const* src_path = record->source_path;
+  char const* trg_path = record->target_path;
   char *buf = 0;
 
   ERR_REGION_BEGIN() {
     // try to load the source cue
-    src = cue_sheet_parse_filename(src_path->get_str(src_path), record->result);
+    src = cue_sheet_parse_filename(src_path, record->result);
     ERR_REGION_NULL_CHECK(src, err);
 
     cue_sheet_t* local_src = src;
@@ -204,12 +206,11 @@ static errno_t convert_record(cue_traverse_record_t* record, cue_traverse_visito
     // if we are actually running, try to write the converted cue
     if (!visitor->report_only) {
       errno_t write_err;
-      char const *trg_path_cstr = trg_path->get_str(trg_path);
-      write_err = write_cue(local_converted, trg_path_cstr, record->result);
+      write_err = write_transformed_cue(record);
 
       // if there was an error creating the cue, log it here as a line 0 error
       if (write_err) {
-        buf = msnprintf("Failed to create cue file: %s", trg_path_cstr);
+        buf = msnprintf("Failed to create cue file: %s", trg_path);
         ERR_REGION_NULL_CHECK(buf, err);
 
         ERR_REGION_NULL_CHECK(cue_sheet_parse_result_add_error(record->result, 0, buf), err);
@@ -217,6 +218,8 @@ static errno_t convert_record(cue_traverse_record_t* record, cue_traverse_visito
       }
 
       ERR_REGION_ERROR_CHECK(write_err, err);
+
+      ERR_REGION_ERROR_CHECK(process_track_files(record), err);
     }
 
   } ERR_REGION_END()
@@ -226,9 +229,12 @@ static errno_t convert_record(cue_traverse_record_t* record, cue_traverse_visito
   return err;
 }
 
-static errno_t write_cue(cue_sheet_t* cue, char const* path, cue_sheet_parse_result_t* result) {
+static errno_t write_transformed_cue(cue_traverse_record_t *record) {
   errno_t err = 0;
   char const *dir = 0;
+  cue_sheet_t const *cue = record->target_sheet;
+  char const *path = record->target_path;
+  cue_sheet_parse_result_t *result = record->result;
 
   ERR_REGION_BEGIN() {
 
@@ -244,6 +250,67 @@ static errno_t write_cue(cue_sheet_t* cue, char const* path, cue_sheet_parse_res
   } ERR_REGION_END()
 
   SAFE_FREE(dir);
+
+  return err;
+}
+
+static errno_t process_track_files(cue_traverse_record_t* record) {
+
+  // we can assume that the number of files in the source and target cues
+  // are the same, since the target was derived from the source.
+  // we iterate over both cues, comparing the types of corresponding
+  // files.  If they are the same, just copy them.  If they differ
+  // (target is OGG) then we convert during the copy.
+
+  errno_t err = 0;
+  cue_sheet_t const* src = record->source_sheet;
+  cue_sheet_t const* trg = record->target_sheet;
+  short num_files = src->num_files;
+  char const* src_dir = 0;
+  char const* trg_dir = 0;
+  char const* src_path = 0;
+  char const* trg_path = 0;
+
+  ERR_REGION_BEGIN() {
+    src_dir = path_dir_part(record->source_path);
+    ERR_REGION_NULL_CHECK(src_dir, err);
+    trg_dir = path_dir_part(record->target_path);
+    ERR_REGION_NULL_CHECK(trg_dir, err);
+
+    for (short i = 0; i < num_files; ++i) {
+      cue_file_t const *src_file = src->file[i];
+      cue_file_t const *trg_file = trg->file[i];
+
+      src_path = join_dir_file_path(src_dir, src_file->filename);
+      ERR_REGION_NULL_CHECK(src_path, err);
+
+      trg_path = join_dir_file_path(trg_dir, trg_file->filename);
+      ERR_REGION_NULL_CHECK(trg_path, err);
+
+      if (src_file->type == trg_file->type) {
+        ERR_REGION_ERROR_CHECK(copy_file(src_path, trg_path), err);
+      }
+      else {
+        ERR_REGION_ERROR_CHECK(convert_file(src_path, trg_path), err);
+      }
+
+      SAFE_FREE(trg_path);
+      SAFE_FREE(src_path);
+
+    } ERR_REGION_ERROR_BUBBLE(err);
+
+  } ERR_REGION_END()
+
+  SAFE_FREE(src_path);
+  SAFE_FREE(trg_path);
+  SAFE_FREE(src_dir);
+  SAFE_FREE(trg_dir);
+
+  return err;
+}
+
+static errno_t convert_file(char const* src_path, char const* trg_path) {
+  errno_t err = 0;
 
   return err;
 }

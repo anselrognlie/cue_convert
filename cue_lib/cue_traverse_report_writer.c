@@ -52,9 +52,7 @@ errno_t cue_traverse_report_writer_write(
 
     for (int i = 0; i < report->transformed_cue_count; ++i) {
       cue_traverse_record_t const* record = report->transformed_list->get(report->transformed_list, i);
-      char const* src_path = record->source_path->get_str(record->source_path);
-      char const* dst_path = record->target_path->get_str(record->target_path);
-      written = line_writer_write_fmt(writer, "%s%s%s%s", "  ", src_path, " -> ", dst_path);
+      written = line_writer_write_fmt(writer, "%s%s%s%s", "  ", record->source_path, " -> ", record->target_path);
       if (! written) break;
     }
     ERR_REGION_CMP_CHECK(!written, err);
@@ -64,9 +62,7 @@ errno_t cue_traverse_report_writer_write(
 
     for (int i = 0; i < report->failed_cue_count; ++i) {
       cue_traverse_record_t const* record = report->failed_list->get(report->failed_list, i);
-      char const* src_path = record->source_path->get_str(record->source_path);
-      char const* dst_path = record->target_path->get_str(record->target_path);
-      written = line_writer_write_fmt(writer, "%s%s%s%s", "  ", src_path, " -> ", dst_path);
+      written = line_writer_write_fmt(writer, "%s%s%s%s", "  ", record->source_path, " -> ", record->target_path);
       if (!written) break;  // break out of record loop
 
       if (record->result->has_errors) {

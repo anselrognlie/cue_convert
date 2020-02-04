@@ -387,4 +387,28 @@ short file_exists(char const* path) {
   return result;
 }
 
+errno_t copy_file(char const* src, char const* dst) {
+  errno_t err = 0;
+  BOOL win_success = 1;
+  wchar_t* src_w = 0;
+  wchar_t* dst_w = 0;
+
+  ERR_REGION_BEGIN() {
+    src_w = widen_path(src);
+    ERR_REGION_NULL_CHECK(src_w, err);
+
+    dst_w = widen_path(dst);
+    ERR_REGION_NULL_CHECK(dst_w, err);
+
+    win_success = CopyFile(src_w, dst_w, FALSE);  // allow overwrite
+    ERR_REGION_CMP_CHECK(! win_success, err);
+
+  } ERR_REGION_END()
+
+  SAFE_FREE(dst_w);
+  SAFE_FREE(src_w);
+
+  return err;
+}
+
 #endif

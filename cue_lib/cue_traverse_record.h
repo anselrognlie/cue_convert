@@ -7,12 +7,11 @@
 struct cue_sheet_parse_result;
 
 typedef struct cue_traverse_record {
-  struct char_vector* target_path;
+  char const *target_path;
   struct cue_sheet* target_sheet;
-  struct char_vector* source_path;
+  char const *source_path;
   struct cue_sheet* source_sheet;
   struct cue_sheet_parse_result *result;
-
 } cue_traverse_record_t;
 
 cue_traverse_record_t* cue_traverse_record_alloc(void);

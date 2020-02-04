@@ -23,6 +23,11 @@
     ERR_EXIT() \
   }
 
+#define ERR_REGION_ERROR_BUBBLE(arg) \
+  if (arg) { \
+    ERR_EXIT() \
+  }
+
 #define ERR_REGION_ERROR_CHECK(arg, err) \
   ERR_REGION_ERROR_CHECK_CODE(arg, err, -1)
 

@@ -189,3 +189,18 @@ char const* path_file_part(char const* path) {
 
   return file;
 }
+
+char const* join_dir_file_path(char const* dir, char const* file) {
+  char const* strings[] = { dir, file };
+  return join_cstrs(strings, 2, k_path_separator);
+}
+
+char const* join_path_parts(char const** parts) {
+  char const** end = parts;
+  size_t num_parts = 0;
+
+  while (*(end++));
+  num_parts = end - parts - 1;
+
+  return join_cstrs(parts, num_parts, k_path_separator);
+}
