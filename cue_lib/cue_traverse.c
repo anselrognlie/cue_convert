@@ -18,13 +18,20 @@
 #include "file_line_writer.h"
 #include "format_helpers.h"
 
+#include "oggenc.h"
+
 static char * make_path_with_history(char_vector_t const* root_path, string_vector_t const* history);
 static char * make_simple_path(char const *directory, char const*filename);
 static short is_cue_file(char const *filename);
-static errno_t convert_record(cue_traverse_record_t *record, cue_traverse_visitor_t *visitor);
-static errno_t write_transformed_cue(cue_traverse_record_t* record);
-static errno_t process_track_files(cue_traverse_record_t* record);
-static errno_t convert_file(char const *src_path, char const *trg_path);
+static errno_t convert_record(cue_traverse_record_t *record, short reort_only);
+static errno_t write_transformed_cue(cue_traverse_record_t const* record);
+static errno_t process_track_files(cue_traverse_record_t const* record);
+static errno_t convert_file(
+  char const* src_path, cue_file_type_t src_type,
+  char const* trg_path, cue_file_type_t trg_type);
+static errno_t convert_to_ogg(
+  char const* src_path, cue_file_type_t src_type,
+  char const* trg_path);
 
 //
 // cue traversal visitor
@@ -67,7 +74,7 @@ static short ctv_visit(directory_traversal_handler_i* self_i, directory_traversa
       SAFE_FREE(src_path);
 
       // try to convert
-      transformed = convert_record(record, self) == 0;
+      transformed = convert_record(record, self->report_only) == 0;
 
       // add the appropriate report category
       added = cue_traverse_report_add_record(report, record, transformed);
@@ -176,7 +183,7 @@ static short is_cue_file(char const* filename) {
   return cstr_ends_with(filename, s_cue_suffix);
 }
 
-static errno_t convert_record(cue_traverse_record_t* record, cue_traverse_visitor_t* visitor) {
+static errno_t convert_record(cue_traverse_record_t * record, short report_only) {
   errno_t err = 0;
   cue_sheet_t* src = 0;
   cue_sheet_t* converted = 0;
@@ -204,7 +211,7 @@ static errno_t convert_record(cue_traverse_record_t* record, cue_traverse_visito
     record->target_sheet = local_converted;
 
     // if we are actually running, try to write the converted cue
-    if (!visitor->report_only) {
+    if (!report_only) {
       errno_t write_err;
       write_err = write_transformed_cue(record);
 
@@ -229,7 +236,7 @@ static errno_t convert_record(cue_traverse_record_t* record, cue_traverse_visito
   return err;
 }
 
-static errno_t write_transformed_cue(cue_traverse_record_t *record) {
+static errno_t write_transformed_cue(cue_traverse_record_t const *record) {
   errno_t err = 0;
   char const *dir = 0;
   cue_sheet_t const *cue = record->target_sheet;
@@ -254,7 +261,7 @@ static errno_t write_transformed_cue(cue_traverse_record_t *record) {
   return err;
 }
 
-static errno_t process_track_files(cue_traverse_record_t* record) {
+static errno_t process_track_files(cue_traverse_record_t const * record) {
 
   // we can assume that the number of files in the source and target cues
   // are the same, since the target was derived from the source.
@@ -291,7 +298,7 @@ static errno_t process_track_files(cue_traverse_record_t* record) {
         ERR_REGION_ERROR_CHECK(copy_file(src_path, trg_path), err);
       }
       else {
-        ERR_REGION_ERROR_CHECK(convert_file(src_path, trg_path), err);
+        ERR_REGION_ERROR_CHECK(convert_file(src_path, src_file->type, trg_path, trg_file->type), err);
       }
 
       SAFE_FREE(trg_path);
@@ -309,8 +316,67 @@ static errno_t process_track_files(cue_traverse_record_t* record) {
   return err;
 }
 
-static errno_t convert_file(char const* src_path, char const* trg_path) {
+static errno_t convert_file(
+  char const* src_path, cue_file_type_t src_type,
+  char const* trg_path, cue_file_type_t trg_type) {
+
   errno_t err = 0;
+
+  if (trg_type == EWC_CFT_OGG) {
+    err = convert_to_ogg(src_path, src_type, trg_path);
+  }
+  else
+  {
+    // unknown type
+    err = -1;
+  }
+
+  return err;
+}
+
+static errno_t convert_to_ogg(
+  char const *src_path, cue_file_type_t src_type, 
+  char const* trg_path) {
+
+  errno_t err = 0;
+  string_vector_t *argv = 0;
+
+  ERR_REGION_BEGIN() {
+    ERR_REGION_NULL_CHECK(argv = string_vector_alloc(), err);
+    ERR_REGION_NULL_CHECK(argv->push(argv, "oggenc"), err);
+    
+    // configure the arguments for oggenc
+    switch (src_type) {
+      case EWC_CFT_BINARY: {
+        ERR_REGION_NULL_CHECK(argv->push(argv, "-Q"), err);
+        ERR_REGION_NULL_CHECK(argv->push(argv, "--utf8"), err);
+        ERR_REGION_NULL_CHECK(argv->push(argv, "-r"), err);
+        ERR_REGION_NULL_CHECK(argv->push(argv, "-o"), err);
+        ERR_REGION_NULL_CHECK(argv->push(argv, trg_path), err);
+        ERR_REGION_NULL_CHECK(argv->push(argv, src_path), err);
+      }
+      break;
+
+      case EWC_CFT_WAV: {
+        ERR_REGION_NULL_CHECK(argv->push(argv, "-Q"), err);
+        ERR_REGION_NULL_CHECK(argv->push(argv, "--utf8"), err);
+        ERR_REGION_NULL_CHECK(argv->push(argv, "-o"), err);
+        ERR_REGION_NULL_CHECK(argv->push(argv, trg_path), err);
+        ERR_REGION_NULL_CHECK(argv->push(argv, src_path), err);
+      }
+      break;
+
+      default:
+        // we don't know how to do this
+        err = -1;
+    } ERR_REGION_ERROR_BUBBLE(err);
+
+    // invoke oggenc
+    ERR_REGION_ERROR_CHECK(encode_with_arguments(argv->get_length(argv), argv->get_buffer(argv)), err);
+
+  } ERR_REGION_END ()
+
+  SAFE_FREE_HANDLER(argv, string_vector_free);
 
   return err;
 }

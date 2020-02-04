@@ -250,7 +250,7 @@ void get_args_from_ucs16(int *argc, char ***argv)
     int utf8;
 
     utf8 = parse_for_utf8(*argc, *argv);
-    optind = 1; /* Reset getopt_long */
+    optind = 0; /* Reset getopt_long */
 
     /* If command line is already UTF-8, don't convert */
     if (utf8)

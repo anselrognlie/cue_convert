@@ -77,15 +77,16 @@ struct option long_options[] = {
 static char *generate_name_string(char *format, char *remove_list,
         char *replace_list, char *artist, char *title, char *album,
         char *track, char *date, char *genre);
-static void parse_options(int argc, char **argv, oe_options *opt);
+static int parse_options(int argc, char **argv, oe_options *opt);
 static void build_comments(vorbis_comment *vc, oe_options *opt, int filenum,
         char **artist,char **album, char **title, char **tracknum, char **date,
         char **genre);
 static void usage(void);
 
-errno_t encode_with_arguments(int argc, char** argv)
+errno_t encode_with_arguments(int argc, char const** argv_const)
 //int main(int argc, char** argv)
 {
+    char **argv = (char**)argv_const;
     /* Default values */
     oe_options opt = {
               NULL, 0, NULL, 0, NULL, 0, NULL, 0, NULL, 0,
@@ -105,13 +106,15 @@ errno_t encode_with_arguments(int argc, char** argv)
     int numfiles;
     int errors=0;
 
+    optind = 0;
     get_args_from_ucs16(&argc, &argv);
 
     setlocale(LC_ALL, "");
     bindtextdomain(PACKAGE, LOCALEDIR);
     textdomain(PACKAGE);
 
-    parse_options(argc, argv, &opt);
+    int p_opt = parse_options(argc, argv, &opt);
+    if (p_opt) return p_opt;
 
     if(optind >= argc)
     {
@@ -131,14 +134,14 @@ errno_t encode_with_arguments(int argc, char** argv)
         if(!strcmp(infiles[i], "-") && numfiles > 1)
         {
             fprintf(stderr, _("ERROR: Multiple files specified when using stdin\n"));
-            exit(1);
+            return 1;
         }
     }
 
     if(numfiles > 1 && opt.outfile)
     {
         fprintf(stderr, _("ERROR: Multiple input files with specified output filename: suggest using -n\n"));
-        exit(1);
+        return 1;
     }
 
     if(!opt.fixedserial)
@@ -690,7 +693,7 @@ static char *generate_name_string(char *format, char *remove_list,
     return buffer;
 }
 
-static void parse_options(int argc, char **argv, oe_options *opt)
+static int parse_options(int argc, char **argv, oe_options *opt)
 {
     int ret;
     int option_index = 1;
@@ -778,7 +781,7 @@ static void parse_options(int argc, char **argv, oe_options *opt)
 
                 else {
                     fprintf(stderr, _("Internal error parsing command line options\n"));
-                    exit(1);
+                    return 1;
                 }
 
                 break;
@@ -804,7 +807,7 @@ static void parse_options(int argc, char **argv, oe_options *opt)
                 break;
             case 'h':
                 usage();
-                exit(0);
+                return 0;
                 break;
             case 'l':
                 opt->album = realloc(opt->album, (++opt->album_count)*sizeof(char *));
@@ -911,7 +914,7 @@ static void parse_options(int argc, char **argv, oe_options *opt)
                 break;
             case 'V':
                 fprintf(stdout, _("oggenc from %s %s\n"), PACKAGE, VERSION);
-                exit(0);
+                return 0;
                 break;
             case 'B':
                 if (opt->rawmode != 1)
@@ -986,10 +989,11 @@ static void parse_options(int argc, char **argv, oe_options *opt)
                 break;
             default:
                 usage();
-                exit(0);
+                return 0;
         }
     }
 
+    return 0;
 }
 
 static void add_tag(vorbis_comment *vc, oe_options *opt,char *name, char *value)
