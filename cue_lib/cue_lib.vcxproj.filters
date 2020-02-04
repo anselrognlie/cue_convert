@@ -39,6 +39,9 @@
     <ClInclude Include="cue_sheet_parse_result.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cue_options.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cue_file.c">
@@ -63,6 +66,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="cue_sheet_parse_result.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cue_options.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -15,6 +15,7 @@
 #include "cue_traverse_record.h"
 #include "char_vector.h"
 #include "filesystem.h"
+#include "cue_options.h"
 
 #include "test_helpers.h"
 #include "err_helpers.h"
@@ -448,6 +449,143 @@ errno_t test_cue_traverse(void) {
   cue_traverse_report_writer_uninit(&writer);
   cue_traverse_visitor_uninit(&visitor);
   array_line_writer_uninit(&line_writer);
+
+  return err;
+}
+
+typedef struct {
+  char const* source_dir;
+  char const* target_dir;
+  short generate_report;
+  char const* report_path;
+  short quiet;
+} cue_options_test_result_t;
+
+static errno_t compare_options_result(cue_options_t const* opts, cue_options_test_result_t const* result) {
+  errno_t err = 0;
+
+  ERR_REGION_BEGIN() {
+
+    ERR_REGION_CMP_CHECK(opts->source_dir != 0 && result->source_dir == 0, err);
+    if (result->source_dir) ERR_REGION_CMP_CHECK(strcmp(opts->source_dir, result->source_dir) != 0, err);
+    ERR_REGION_CMP_CHECK(opts->target_dir != 0 && result->target_dir == 0, err);
+    if (result->target_dir) ERR_REGION_CMP_CHECK(strcmp(opts->target_dir, result->target_dir) != 0, err);
+    ERR_REGION_CMP_CHECK(opts->report_path != 0 && result->report_path == 0, err);
+    if (result->report_path) ERR_REGION_CMP_CHECK(strcmp(opts->report_path, result->report_path) != 0, err);
+    ERR_REGION_CMP_CHECK(opts->generate_report != result->generate_report, err);
+    ERR_REGION_CMP_CHECK(opts->quiet != result->quiet, err);
+
+  } ERR_REGION_END()
+
+  return err;
+}
+
+errno_t test_cue_options(void) {
+  errno_t err = 0;
+
+  ERR_REGION_BEGIN() {
+
+    cue_options_t opts;
+
+    printf("Checking cue options... ");
+
+    // test 1. everything ok
+    ERR_REGION_BEGIN() {
+      ERR_REGION_ERROR_CHECK(cue_options_init(&opts), err);
+
+      char const *argv[] = {
+        "-q",
+        "-r",
+        "report path",
+        "src dir",
+        "trg dir",
+      };
+      size_t argc = sizeof(argv) / sizeof(*argv);
+
+      cue_options_test_result_t result = {
+        "src dir",
+        "trg dir",
+        1,
+        "report path",
+        1,
+      };
+
+      ERR_REGION_ERROR_CHECK(cue_options_load_from_args(&opts, argc, argv), err);
+
+      err = compare_options_result(&opts, &result);
+
+      cue_options_uninit(&opts);
+    } ERR_REGION_END() ERR_REGION_ERROR_BUBBLE(err);
+
+    // test 2. only dirs
+    ERR_REGION_BEGIN() {
+      ERR_REGION_ERROR_CHECK(cue_options_init(&opts), err);
+
+      char const* argv[] = {
+        "src dir",
+        "trg dir",
+      };
+      size_t argc = sizeof(argv) / sizeof(*argv);
+
+      cue_options_test_result_t result = {
+        "src dir",
+        "trg dir",
+        0,
+        NULL,
+        0,
+      };
+
+      ERR_REGION_ERROR_CHECK(cue_options_load_from_args(&opts, argc, argv), err);
+
+      err = compare_options_result(&opts, &result);
+
+      cue_options_uninit(&opts);
+    } ERR_REGION_END() ERR_REGION_ERROR_BUBBLE(err);
+
+    // test 3. no dirs (empty)
+    ERR_REGION_BEGIN() {
+      ERR_REGION_ERROR_CHECK(cue_options_init(&opts), err);
+
+      char const* argv[] = { 0 };
+      size_t argc = 0;
+
+      ERR_REGION_CMP_CHECK(! cue_options_load_from_args(&opts, argc, argv), err);
+
+      cue_options_uninit(&opts);
+    } ERR_REGION_END() ERR_REGION_ERROR_BUBBLE(err);
+
+    // test 4. no dirs (-r path)
+    ERR_REGION_BEGIN() {
+      ERR_REGION_ERROR_CHECK(cue_options_init(&opts), err);
+
+      char const* argv[] = {
+        "-r",
+        "report path",
+      };
+      size_t argc = sizeof(argv) / sizeof(*argv);
+
+      ERR_REGION_CMP_CHECK(! cue_options_load_from_args(&opts, argc, argv), err);
+
+      cue_options_uninit(&opts);
+    } ERR_REGION_END() ERR_REGION_ERROR_BUBBLE(err);
+
+    // test 5. no dirs (-r no path)
+    ERR_REGION_BEGIN() {
+      ERR_REGION_ERROR_CHECK(cue_options_init(&opts), err);
+
+      char const* argv[] = {
+        "-r",
+      };
+      size_t argc = sizeof(argv) / sizeof(*argv);
+
+      ERR_REGION_CMP_CHECK(!cue_options_load_from_args(&opts, argc, argv), err);
+
+      cue_options_uninit(&opts);
+    } ERR_REGION_END() ERR_REGION_ERROR_BUBBLE(err);
+
+  } ERR_REGION_END()
+
+  printf("%s\n", err ? "FAILED!" : "passed.");
 
   return err;
 }
