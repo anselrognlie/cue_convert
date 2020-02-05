@@ -28,3 +28,15 @@ char* msnprintf_va(char const* fmt, va_list args) {
 
   return buf;
 }
+
+int safe_fprintf(FILE* file, char const* fmt, ...) {
+  va_list args;
+
+  if (! file) return 0;
+
+  va_start(args, fmt);
+  int written = vfprintf(file, fmt, args);
+  va_end(args);
+
+  return written;
+}
