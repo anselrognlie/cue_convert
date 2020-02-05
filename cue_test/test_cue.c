@@ -8,6 +8,7 @@
 #include "cue_transform.h"
 #include "array_line_reader.h"
 #include "array_line_writer.h"
+#include "null_line_writer.h"
 #include "cue_traverse.h"
 #include "directory_traversal.h"
 #include "cue_traverse_report.h"
@@ -16,6 +17,8 @@
 #include "char_vector.h"
 #include "filesystem.h"
 #include "cue_options.h"
+#include "string_vector.h"
+#include "cue_convert.h"
 
 #include "test_helpers.h"
 #include "err_helpers.h"
@@ -404,8 +407,10 @@ static errno_t compare_report(cue_traverse_report_t* report, conversion_recs_t c
 
 errno_t test_cue_traverse(void) {
   cue_traverse_visitor_t visitor;
+  cue_traverse_visitor_opts_t visitor_opts;
   cue_traverse_report_writer_t writer;
   array_line_writer_t line_writer;
+  null_line_writer_t null_line_writer;
   compare_visitor_t cv;
   errno_t err = 0;
 
@@ -413,16 +418,20 @@ errno_t test_cue_traverse(void) {
 
   ERR_REGION_BEGIN() {
     array_line_writer_init(&line_writer);
+    ERR_REGION_ERROR_CHECK(null_line_writer_init(&null_line_writer), err);
     ERR_REGION_ERROR_CHECK(cue_traverse_report_writer_init_params(
       &writer,
       &line_writer.line_writer), err);
 
-    short report_only = 0;
+    memset(&visitor_opts, 0, sizeof(visitor_opts));
+    visitor_opts.target_path = s_cue_trg_dir;
+    visitor_opts.source_path = s_cue_src_dir;
+    visitor_opts.report_only = 0;
+    visitor_opts.writer = &null_line_writer.line_writer;
+
     ERR_REGION_ERROR_CHECK(cue_traverse_visitor_init(
       &visitor, 
-      s_cue_trg_dir, 
-      s_cue_src_dir, 
-      report_only), err);
+      &visitor_opts), err);
 
     traverse_dir_path(s_cue_src_dir, &visitor.handler_i);
 
@@ -449,16 +458,18 @@ errno_t test_cue_traverse(void) {
   cue_traverse_report_writer_uninit(&writer);
   cue_traverse_visitor_uninit(&visitor);
   array_line_writer_uninit(&line_writer);
+  null_line_writer_uninit(&null_line_writer);
 
   return err;
 }
 
-typedef struct {
+typedef struct cue_options_test_result {
   char const* source_dir;
   char const* target_dir;
   short generate_report;
   char const* report_path;
   short quiet;
+  short test_only;
 } cue_options_test_result_t;
 
 static errno_t compare_options_result(cue_options_t const* opts, cue_options_test_result_t const* result) {
@@ -474,6 +485,7 @@ static errno_t compare_options_result(cue_options_t const* opts, cue_options_tes
     if (result->report_path) ERR_REGION_CMP_CHECK(strcmp(opts->report_path, result->report_path) != 0, err);
     ERR_REGION_CMP_CHECK(opts->generate_report != result->generate_report, err);
     ERR_REGION_CMP_CHECK(opts->quiet != result->quiet, err);
+    ERR_REGION_CMP_CHECK(opts->test_only != result->test_only, err);
 
   } ERR_REGION_END()
 
@@ -503,11 +515,12 @@ errno_t test_cue_options(void) {
       size_t argc = sizeof(argv) / sizeof(*argv);
 
       cue_options_test_result_t result = {
-        "src dir",
-        "trg dir",
-        1,
-        "report path",
-        1,
+        .source_dir = "src dir",
+        .target_dir= "trg dir",
+        .generate_report = 1,
+        .report_path = "report path",
+        .quiet = 1,
+        .test_only = 0,
       };
 
       ERR_REGION_ERROR_CHECK(cue_options_load_from_args(&opts, argc, argv), err);
@@ -528,11 +541,8 @@ errno_t test_cue_options(void) {
       size_t argc = sizeof(argv) / sizeof(*argv);
 
       cue_options_test_result_t result = {
-        "src dir",
-        "trg dir",
-        0,
-        NULL,
-        0,
+        .source_dir = "src dir",
+        .target_dir = "trg dir",
       };
 
       ERR_REGION_ERROR_CHECK(cue_options_load_from_args(&opts, argc, argv), err);
@@ -584,6 +594,45 @@ errno_t test_cue_options(void) {
     } ERR_REGION_END() ERR_REGION_ERROR_BUBBLE(err);
 
   } ERR_REGION_END()
+
+  printf("%s\n", err ? "FAILED!" : "passed.");
+
+  return err;
+}
+
+errno_t test_cue_convert(void) {
+  errno_t err = 0;
+  string_vector_t *argv = 0;
+  cue_convert_env_t env;
+  compare_visitor_t cv;
+
+  env.out = stdout; 
+  env.err = stderr;
+
+  printf("Checking cue convert... ");
+
+  ERR_REGION_BEGIN() {
+    
+    ERR_REGION_NULL_CHECK(argv = string_vector_alloc(), err);
+    ERR_REGION_NULL_CHECK(argv->push(argv, "some_dir\\cue_tests"), err);
+    ERR_REGION_NULL_CHECK(argv->push(argv, "-q"), err);
+    ERR_REGION_NULL_CHECK(argv->push(argv, s_cue_src_dir), err);
+    ERR_REGION_NULL_CHECK(argv->push(argv, s_cue_trg_dir), err);
+
+    ERR_REGION_ERROR_CHECK(cue_convert_with_args(
+      argv->get_length(argv),
+      argv->get_buffer(argv),
+      &env), err);
+
+    // make sure the expected directory structure exists
+    compare_visitor_init(&cv, s_test_traverse_result, s_test_traverse_result_len);
+    traverse_dir_path(s_cue_trg_dir, &cv.handler_i);
+    ERR_REGION_CMP_CHECK(cv.line != s_test_traverse_result_len, err);
+
+  } ERR_REGION_END()
+
+  delete_dir(s_cue_trg_dir);
+  SAFE_FREE_HANDLER(argv, string_vector_free);
 
   printf("%s\n", err ? "FAILED!" : "passed.");
 

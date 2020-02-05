@@ -20,7 +20,7 @@
 
 #include "oggenc.h"
 
-static char * make_path_with_history(char_vector_t const* root_path, string_vector_t const* history);
+static char * make_path_with_history(char const* root_path, string_vector_t const* history);
 static char * make_simple_path(char const *directory, char const*filename);
 static short is_cue_file(char const *filename);
 static errno_t convert_record(cue_traverse_record_t *record, short reort_only);
@@ -93,29 +93,23 @@ static short ctv_visit(directory_traversal_handler_i* self_i, directory_traversa
 }
 
 errno_t cue_traverse_visitor_init(cue_traverse_visitor_t* self,
-  char const* target_path,
-  char const* source_path,
-  short report_only) {
+  cue_traverse_visitor_opts_t const *opts) {
 
   errno_t err = 0;
 
-  char_vector_t* target_path_str = 0;
-  char_vector_t* source_path_str = 0;
+  char const* target_path_str = 0;
+  char const* source_path_str = 0;
   cue_traverse_report_t *report = 0;
 
   ERR_REGION_BEGIN() {
     memset(self, 0, sizeof(*self));
     self->handler_i.self = self;
     self->handler_i.visit = ctv_visit;
-    self->report_only = report_only;
+    self->report_only = opts->report_only;
 
-    target_path_str = char_vector_alloc();
-    ERR_REGION_NULL_CHECK(target_path_str, err);
-    ERR_REGION_NULL_CHECK(target_path_str->set_str(target_path_str, target_path), err);
+    ERR_REGION_NULL_CHECK(target_path_str = _strdup(opts->target_path), err);
 
-    source_path_str = char_vector_alloc();
-    ERR_REGION_NULL_CHECK(source_path_str, err);
-    ERR_REGION_NULL_CHECK(source_path_str->set_str(source_path_str, source_path), err);
+    ERR_REGION_NULL_CHECK(source_path_str = _strdup(opts->source_path), err);
 
     report = cue_traverse_report_alloc();
     ERR_REGION_NULL_CHECK(report, err);
@@ -129,16 +123,16 @@ errno_t cue_traverse_visitor_init(cue_traverse_visitor_t* self,
   } ERR_REGION_END()
 
   SAFE_FREE_HANDLER(report, cue_traverse_report_free);
-  SAFE_FREE_HANDLER(source_path_str, char_vector_free);
-  SAFE_FREE_HANDLER(target_path_str, char_vector_free);
+  SAFE_FREE(source_path_str);
+  SAFE_FREE(target_path_str);
 
   return err;
 }
 
 void cue_traverse_visitor_uninit(cue_traverse_visitor_t* self) {
   SAFE_FREE_HANDLER(self->report, cue_traverse_report_free);
-  SAFE_FREE_HANDLER(self->source_path, char_vector_free);
-  SAFE_FREE_HANDLER(self->target_path, char_vector_free);
+  SAFE_FREE(self->source_path);
+  SAFE_FREE(self->target_path);
 }
 
 static char * make_simple_path(char const* directory, char const* filename) {
@@ -146,9 +140,8 @@ static char * make_simple_path(char const* directory, char const* filename) {
   return join_cstrs(parts, 2, k_path_separator);
 }
 
-static char * make_path_with_history(char_vector_t const* root_path, string_vector_t const* history) {
+static char * make_path_with_history(char const* root, string_vector_t const* history) {
   char * path = 0;
-  char const* root = 0;
   char * parallel_path = 0;
 
   ERR_REGION_BEGIN() {
@@ -159,7 +152,6 @@ static char * make_path_with_history(char_vector_t const* root_path, string_vect
       k_path_separator);
     ERR_REGION_NULL_CHECK_CODE(path, parallel_path, NULL);
 
-    root = root_path->get_str(root_path);
     ERR_REGION_NULL_CHECK_CODE(root, parallel_path, NULL);
 
     parallel_path = make_simple_path(root, path);

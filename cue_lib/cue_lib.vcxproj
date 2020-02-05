@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="cue_convert.h" />
     <ClInclude Include="cue_file.h" />
     <ClInclude Include="cue_options.h" />
     <ClInclude Include="cue_parser.h" />
@@ -30,6 +31,7 @@
     <ClInclude Include="cue_traverse_report_writer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="cue_convert.c" />
     <ClCompile Include="cue_file.c" />
     <ClCompile Include="cue_options.c" />
     <ClCompile Include="cue_parser.c" />

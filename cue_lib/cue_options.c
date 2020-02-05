@@ -6,8 +6,9 @@
 #include "mem_helpers.h"
 
 static const char k_help_message[] = 
-"[-q] [-r report_path] source_directory target_directory\n"
+"[-t] [-q] [-r report_path] source_directory target_directory\n"
 "\n"
+"-t - test mode - just examine the cues, don't convert\n"
 "-q - quiet mode - no console output\n"
 "-r report_path - report location - where the conversion report\n"
 "                 will be written.  If not supplied, the report\n"
@@ -58,6 +59,7 @@ errno_t cue_options_load_from_args(struct cue_options* self, int argc, char cons
   char const* src_dir_dup = 0;
   char const* trg_dir_dup = 0;
   short quiet = 0;
+  short test_only = 0;
 
   // -q -r <report.file> <src_dir> <trg_dir>
 
@@ -80,6 +82,10 @@ errno_t cue_options_load_from_args(struct cue_options* self, int argc, char cons
         case 'q':
           quiet = 1;
         break;
+
+        case 't':
+          test_only = 1;
+          break;
 
         case 'r':
           if (i > argc-2) {
@@ -122,6 +128,7 @@ errno_t cue_options_load_from_args(struct cue_options* self, int argc, char cons
     self->report_path = report_path_dup;
     self->generate_report = (report_path != 0);
     self->quiet = quiet;
+    self->test_only = test_only;
 
     return err;
 

@@ -23,3 +23,4 @@ errno_t test_int_queue(void);
 errno_t test_double_queue(void);
 errno_t test_parallel_traverse(void);
 errno_t test_cue_options(void);
+errno_t test_cue_convert(void);

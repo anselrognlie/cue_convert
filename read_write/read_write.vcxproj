@@ -28,6 +28,7 @@
     <ClInclude Include="file_line_writer.h" />
     <ClInclude Include="line_reader.h" />
     <ClInclude Include="line_writer.h" />
+    <ClInclude Include="null_line_writer.h" />
     <ClInclude Include="path.h" />
     <ClInclude Include="path_shared.h" />
   </ItemGroup>
@@ -39,6 +40,7 @@
     <ClCompile Include="file_line_reader.c" />
     <ClCompile Include="file_line_writer.c" />
     <ClCompile Include="line_writer.c" />
+    <ClCompile Include="null_line_writer.c" />
     <ClCompile Include="path_shared.c" />
     <ClCompile Include="path_win.c" />
   </ItemGroup>

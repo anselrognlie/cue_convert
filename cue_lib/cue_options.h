@@ -8,6 +8,7 @@ typedef struct cue_options {
   short generate_report;
   char const *report_path;
   short quiet;
+  short test_only;
 } cue_options_t;
 
 struct cue_options* cue_options_alloc();

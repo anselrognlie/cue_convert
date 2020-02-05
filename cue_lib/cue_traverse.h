@@ -4,24 +4,29 @@
 
 #include "directory_traversal_handler.h"
 
-struct char_vector;
 struct cue_sheet;
 struct cue_traverse_record;
 struct cue_traverse_record_vector;
 struct cue_traverse_report;
+struct line_writer;
+
+typedef struct cue_traverse_visitor_opts {
+  char const* target_path;  // weak ref
+  char const* source_path;  // weak ref
+  short report_only;
+  struct line_writer *writer;  // weak ref
+} cue_traverse_visitor_opts_t;
 
 typedef struct cue_traverse_visitor {
   directory_traversal_handler_i handler_i;
   struct cue_traverse_report *report;
-  struct char_vector *target_path;
-  struct char_vector *source_path;
+  char const *target_path;  // owned copy
+  char const *source_path;  // owned copy
   short report_only;
+  struct line_writer* writer;  // weak ref
 } cue_traverse_visitor_t;
 
-errno_t cue_traverse_visitor_init(cue_traverse_visitor_t* self,
-  char const* target_path,
-  char const* source_path,
-  short report_only);
+errno_t cue_traverse_visitor_init(cue_traverse_visitor_t* self, cue_traverse_visitor_opts_t const *opts);
 
 void cue_traverse_visitor_uninit(cue_traverse_visitor_t* self);
 

@@ -43,6 +43,7 @@ int main(int argc, char const* argv[]) {
   result = test_parallel_traverse() || result;
   result = test_cue_traverse() || result;
   result = test_cue_options() || result;
+  result = test_cue_convert() || result;
 
   printf("%s\n", result ? "FAILURE!" : "All passed.");
 }
