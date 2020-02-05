@@ -144,30 +144,30 @@ errno_t ps_next_path_enumeration(ps_path_enumerator_t* self) {
   return 0;
 }
 
-char const* path_dir_part(char const* path) {
+static char const* string_find_first_part(char const* cstr, char const *delim) {
   // find the last separator
-  char const *sep = find_last_substring(path, k_path_separator);
+  char const* sep = find_last_substring(cstr, delim);
 
   if (!sep)
   {
-    // if no separator, the whole thing is the directory
-    return _strdup(path);
+    // if no separator, the whole thing is the first part
+    return _strdup(cstr);
   }
 
   // otherwise return the first part
-  size_t len = sep - path;
-  char *dir = malloc(len + 1);
-  if (! dir) return NULL;
-  strncpy_s(dir, len + 1, path, len);
-  dir[len] = 0;
+  size_t len = sep - cstr;
+  char* first = malloc(len + 1);
+  if (!first) return NULL;
+  strncpy_s(first, len + 1, cstr, len);
+  first[len] = 0;
 
-  return dir;
+  return first;
 }
 
-char const* path_file_part(char const* path) {
+static char const* string_find_second_part(char const* cstr, char const *delim) {
   // find the last separator
-  size_t sep_len = strlen(k_path_separator);
-  char const* sep = find_last_substring(path, k_path_separator);
+  size_t sep_len = strlen(delim);
+  char const* sep = find_last_substring(cstr, delim);
 
   if (!sep)
   {
@@ -179,15 +179,24 @@ char const* path_file_part(char const* path) {
   sep += sep_len;
 
   // otherwise return the last part
-  size_t total_len = strlen(path);
-  size_t dir_len = sep - path;
-  size_t file_len = total_len - dir_len;
-  char* file = malloc(file_len + 1);
-  if (!file) return NULL;
-  strncpy_s(file, file_len + 1, sep, file_len);
-  file[file_len] = 0;
+  size_t total_len = strlen(cstr);
+  size_t first_len = sep - cstr;
+  size_t second_len = total_len - first_len;
+  char* second = malloc(second_len + 1);
+  if (!second) return NULL;
+  strncpy_s(second, second_len + 1, sep, second_len);
+  second[second_len] = 0;
 
-  return file;
+  return second;
+}
+
+
+char const* path_dir_part(char const* path) {
+  return string_find_first_part(path, k_path_separator);
+}
+
+char const* path_file_part(char const* path) {
+  return string_find_second_part(path, k_path_separator);
 }
 
 char const* join_dir_file_path(char const* dir, char const* file) {
@@ -204,3 +213,12 @@ char const* join_path_parts(char const** parts) {
 
   return join_cstrs(parts, num_parts, k_path_separator);
 }
+
+char const* file_name_part(char const* filename) {
+  return string_find_first_part(filename, k_ext_separator);
+}
+
+char const* file_ext_part(char const* filename) {
+  return string_find_second_part(filename, k_ext_separator);
+}
+

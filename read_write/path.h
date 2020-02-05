@@ -26,3 +26,7 @@ char const* path_dir_part(char const* path);
 char const* path_file_part(char const* path);
 char const* join_dir_file_path(char const* dir, char const* file);
 char const* join_path_parts(char const** parts);
+
+char const* file_name_part(char const* filename);
+char const* file_ext_part(char const* filename);
+

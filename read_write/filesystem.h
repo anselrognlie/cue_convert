@@ -30,3 +30,6 @@ errno_t copy_file(char const* src, char const *dst);
 
 extern const char k_path_separator[];
 extern const char k_path_separator_char;
+
+extern const char k_ext_separator[];
+extern const char k_ext_separator_char;

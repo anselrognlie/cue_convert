@@ -20,7 +20,7 @@ errno_t file_line_writer_init_path(file_line_writer_t* self, char const* path) {
   FILE *file_out = 0;
 
   err = fopen_s(&file_out, path, "wb");
-  if (!err) return -1;
+  if (! file_out) return -1;
 
   file_line_writer_init_fid(self, file_out);
   self->close_file_on_uninit = 1;

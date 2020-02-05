@@ -24,6 +24,10 @@
 const char k_path_separator_char = PATH_SEPARATOR_CHAR;
 const char k_path_separator[] = { PATH_SEPARATOR_CHAR, 0 };
 
+#define EXT_SEPARATOR_CHAR '.'
+const char k_ext_separator_char = EXT_SEPARATOR_CHAR;
+const char k_ext_separator[] = { EXT_SEPARATOR_CHAR, 0 };
+
 static char const s_path_wildcard[] = "\\*";
 static const size_t s_path_wildcard_len = sizeof(s_path_wildcard) - 1;
 

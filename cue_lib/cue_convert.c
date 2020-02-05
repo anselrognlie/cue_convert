@@ -70,6 +70,7 @@ errno_t cue_convert(struct cue_options* opts, cue_convert_env_t* env) {
       ERR_REGION_ERROR_CHECK(cue_traverse_report_writer_write(&report_file_writer, report), err);
     }
 
+    selected_writer->write_line(selected_writer, "");
     ERR_REGION_ERROR_CHECK(cue_traverse_report_writer_write(&report_out_writer, report), err);
 
   } ERR_REGION_END()
@@ -101,21 +102,25 @@ errno_t cue_convert_with_args(int argc, char const** argv, cue_convert_env_t* en
   SAFE_FREE_HANDLER(opts, cue_options_free);
 
   if (show_help) {
-    char const *bin = 0;
-    short free_bin = 1;
+    char const* bin = 0;
+    char const* no_ext = 0;
 
     bin = path_file_part(argv[0]);
-    if (!bin) {
-      free_bin = 0;
-      bin = argv[0];
+    if (!bin || !*bin) {
+      bin = _strdup(argv[0]);
     }
 
-    safe_fprintf(env->out, "%s ", bin);
+    // cut any extension
+    no_ext = file_name_part(bin);
+    if (!no_ext || !*no_ext) {
+      no_ext = _strdup("<binary_name>");
+    }
+
+    safe_fprintf(env->out, "%s ", no_ext);
     safe_fprintf(env->out, "%s", cue_options_get_help());
 
-    if (free_bin) {
-      SAFE_FREE(bin);
-    }
+    SAFE_FREE(bin);
+    SAFE_FREE(no_ext);
   }
 
   return err;
