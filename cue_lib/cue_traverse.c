@@ -50,11 +50,15 @@ static short ctv_visit(directory_traversal_handler_i* self_i, directory_traversa
   cue_traverse_record_t const *added = 0;
   short transformed = 0;
   cue_traverse_report_t *report = self->report;
+  char *msg = 0;
+  line_writer_i *writer = 0;
 
   ERR_REGION_BEGIN() {
 
     if (is_cue_file(entry->get_name(entry))) {
       // found a cue
+
+      writer = self->writer;
 
       // create a traverse record for this
       src_path = make_simple_path(
@@ -62,6 +66,11 @@ static short ctv_visit(directory_traversal_handler_i* self_i, directory_traversa
         entry->get_name(entry)
       );
       ERR_REGION_NULL_CHECK_CODE(src_path, keep_traversing, 0);
+
+      msg = msnprintf("%s%s", "Processing ", src_path);
+      ERR_REGION_NULL_CHECK_CODE(msg, keep_traversing, 0);
+      ERR_REGION_CMP_CHECK_CODE(! writer->write_line(writer, msg), keep_traversing, 0);
+      SAFE_FREE(msg);
 
       dst_path = make_path_with_history(self->target_path, history);
       ERR_REGION_NULL_CHECK_CODE(dst_path, keep_traversing, 0);
@@ -76,6 +85,11 @@ static short ctv_visit(directory_traversal_handler_i* self_i, directory_traversa
       // try to convert
       transformed = convert_record(record, self->report_only) == 0;
 
+      msg = msnprintf("%s%s", "  ", transformed ? "Success." : "FAILED!");
+      ERR_REGION_NULL_CHECK_CODE(msg, keep_traversing, 0);
+      ERR_REGION_CMP_CHECK_CODE(!writer->write_line(writer, msg), keep_traversing, 0);
+      SAFE_FREE(msg);
+
       // add the appropriate report category
       added = cue_traverse_report_add_record(report, record, transformed);
       ERR_REGION_NULL_CHECK_CODE(added, keep_traversing, 0);
@@ -88,6 +102,7 @@ static short ctv_visit(directory_traversal_handler_i* self_i, directory_traversa
   SAFE_FREE_HANDLER(record, cue_traverse_record_free);
   SAFE_FREE(dst_path);
   SAFE_FREE(src_path);
+  SAFE_FREE(msg);
 
   return keep_traversing;
 }
@@ -106,6 +121,7 @@ errno_t cue_traverse_visitor_init(cue_traverse_visitor_t* self,
     self->handler_i.self = self;
     self->handler_i.visit = ctv_visit;
     self->report_only = opts->report_only;
+    self->writer = opts->writer;
 
     ERR_REGION_NULL_CHECK(target_path_str = _strdup(opts->target_path), err);
 
