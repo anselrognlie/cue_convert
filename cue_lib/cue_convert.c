@@ -62,7 +62,7 @@ errno_t cue_convert(struct cue_options* opts, cue_convert_env_t* env) {
       &visitor,
       &visitor_opts), err);
 
-    traverse_dir_path(opts->source_dir, &visitor.handler_i);
+    traverse_dir_path(opts->source_dir, &visitor.pv_t.handler_i);
 
     cue_traverse_report_t* report = visitor.report;
 

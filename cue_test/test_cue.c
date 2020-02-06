@@ -433,7 +433,7 @@ errno_t test_cue_traverse(void) {
       &visitor, 
       &visitor_opts), err);
 
-    traverse_dir_path(s_cue_src_dir, &visitor.handler_i);
+    traverse_dir_path(s_cue_src_dir, &visitor.pv_t.handler_i);
 
     cue_traverse_report_t *report = visitor.report;
 

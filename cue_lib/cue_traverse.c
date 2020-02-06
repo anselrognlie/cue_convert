@@ -37,20 +37,19 @@ static errno_t convert_to_ogg(
 // cue traversal visitor
 //
 
-static short ctv_visit(directory_traversal_handler_i* self_i, directory_traversal_handler_state_t const* state) {
-  cue_traverse_visitor_t* self = (cue_traverse_visitor_t*)self_i->self;
-  file_handle_i const* directory = state->directory;
-  directory_entry_i const* entry = state->entry;
-  string_vector_t* history = state->history;
+static short ctv_visit(parallel_visitor_t *self_t, parallel_visitor_state_t const* state) {
+
+  cue_traverse_visitor_t* self = (cue_traverse_visitor_t*)self_t->self;
+  file_handle_i const* directory = state->base_state->directory;
+  directory_entry_i const* entry = state->base_state->entry;
 
   short keep_traversing = 1;
-  char * dst_path = 0;
+  char const * dst_path = 0;
   char *src_path = 0;
   cue_traverse_record_t* record = 0;
   cue_traverse_record_t const *added = 0;
   short transformed = 0;
   cue_traverse_report_t *report = self->report;
-  char *msg = 0;
   line_writer_i *writer = 0;
 
   ERR_REGION_BEGIN() {
@@ -71,8 +70,7 @@ static short ctv_visit(directory_traversal_handler_i* self_i, directory_traversa
         ! line_writer_write_fmt(writer, "%s%s", "Processing ", src_path), 
         keep_traversing, 0);
 
-      dst_path = make_path_with_history(self->target_path, history);
-      ERR_REGION_NULL_CHECK_CODE(dst_path, keep_traversing, 0);
+      dst_path = state->parallel_path;
 
       // if the destination already exists, and we are not in overwrite mode,
       // just terminate this visit
@@ -95,7 +93,6 @@ static short ctv_visit(directory_traversal_handler_i* self_i, directory_traversa
       ERR_REGION_NULL_CHECK_CODE(record, keep_traversing, 0);
 
       // don't need the paths any longer
-      SAFE_FREE(dst_path);
       SAFE_FREE(src_path);
 
       // try to convert
@@ -115,9 +112,7 @@ static short ctv_visit(directory_traversal_handler_i* self_i, directory_traversa
   } ERR_REGION_END()
 
   SAFE_FREE_HANDLER(record, cue_traverse_record_free);
-  SAFE_FREE(dst_path);
   SAFE_FREE(src_path);
-  SAFE_FREE(msg);
 
   return keep_traversing;
 }
@@ -127,26 +122,23 @@ errno_t cue_traverse_visitor_init(cue_traverse_visitor_t* self,
 
   errno_t err = 0;
 
-  char const* target_path_str = 0;
   char const* source_path_str = 0;
   cue_traverse_report_t *report = 0;
 
   ERR_REGION_BEGIN() {
     memset(self, 0, sizeof(*self));
-    self->handler_i.self = self;
-    self->handler_i.visit = ctv_visit;
+    parallel_visitor_init(&self->pv_t, opts->target_path);
+    self->pv_t.self = self;
+    self->pv_t.visit = ctv_visit;
     self->report_only = opts->report_only;
     self->overwrite = opts->overwrite;
     self->writer = opts->writer;
-
-    ERR_REGION_NULL_CHECK(target_path_str = _strdup(opts->target_path), err);
 
     ERR_REGION_NULL_CHECK(source_path_str = _strdup(opts->source_path), err);
 
     report = cue_traverse_report_alloc();
     ERR_REGION_NULL_CHECK(report, err);
 
-    self->target_path = target_path_str;
     self->source_path = source_path_str;
     self->report = report;
 
@@ -156,7 +148,6 @@ errno_t cue_traverse_visitor_init(cue_traverse_visitor_t* self,
 
   SAFE_FREE_HANDLER(report, cue_traverse_report_free);
   SAFE_FREE(source_path_str);
-  SAFE_FREE(target_path_str);
 
   return err;
 }
@@ -164,7 +155,7 @@ errno_t cue_traverse_visitor_init(cue_traverse_visitor_t* self,
 void cue_traverse_visitor_uninit(cue_traverse_visitor_t* self) {
   SAFE_FREE_HANDLER(self->report, cue_traverse_report_free);
   SAFE_FREE(self->source_path);
-  SAFE_FREE(self->target_path);
+  parallel_visitor_uninit(&self->pv_t);
 }
 
 static char * make_simple_path(char const* directory, char const* filename) {

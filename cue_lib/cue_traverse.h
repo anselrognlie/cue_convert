@@ -2,7 +2,7 @@
 
 #include <stddef.h>
 
-#include "directory_traversal_handler.h"
+#include "parallel_visitor.h"
 
 struct cue_sheet;
 struct cue_traverse_record;
@@ -19,9 +19,8 @@ typedef struct cue_traverse_visitor_opts {
 } cue_traverse_visitor_opts_t;
 
 typedef struct cue_traverse_visitor {
-  directory_traversal_handler_i handler_i;
+  parallel_visitor_t pv_t;
   struct cue_traverse_report *report;
-  char const *target_path;  // owned copy
   char const *source_path;  // owned copy
   short report_only;
   short overwrite;
