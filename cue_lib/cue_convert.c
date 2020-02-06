@@ -24,7 +24,7 @@ errno_t cue_convert(struct cue_options* opts, cue_convert_env_t* env) {
   cue_traverse_report_writer_t report_file_writer = { 0 };
   cue_traverse_report_writer_t report_out_writer = { 0 };
   cue_traverse_report_t *report = 0;
-  cue_traverse_visitor_opts_t visitor_opts;
+  cue_traverse_visitor_opts_t visitor_opts = { 0 };
   
   ERR_REGION_BEGIN() {
     if (opts->generate_report) {

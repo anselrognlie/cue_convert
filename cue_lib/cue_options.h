@@ -9,6 +9,7 @@ typedef struct cue_options {
   char const *report_path;
   short quiet;
   short test_only;
+  short overwrite;
 } cue_options_t;
 
 struct cue_options* cue_options_alloc();

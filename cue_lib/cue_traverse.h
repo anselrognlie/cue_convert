@@ -14,6 +14,7 @@ typedef struct cue_traverse_visitor_opts {
   char const* target_path;  // weak ref
   char const* source_path;  // weak ref
   short report_only;
+  short overwrite;
   struct line_writer *writer;  // weak ref
 } cue_traverse_visitor_opts_t;
 
@@ -23,6 +24,7 @@ typedef struct cue_traverse_visitor {
   char const *target_path;  // owned copy
   char const *source_path;  // owned copy
   short report_only;
+  short overwrite;
   struct line_writer* writer;  // weak ref
 } cue_traverse_visitor_t;
 

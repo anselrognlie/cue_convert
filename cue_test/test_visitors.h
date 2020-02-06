@@ -3,6 +3,7 @@
 #include <stddef.h>
 
 #include "directory_traversal_handler.h"
+#include "parallel_visitor.h"
 
 struct char_vector;
 
@@ -42,8 +43,7 @@ void compare_visitor_init(compare_visitor_t* self,
 //
 
 typedef struct parallel_traverse_visitor {
-  directory_traversal_handler_i handler_i;
-  struct char_vector *root_path;
+  parallel_visitor_t pv_t;
   short passed;
   size_t line;
   char const** result;

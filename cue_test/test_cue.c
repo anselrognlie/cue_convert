@@ -407,7 +407,7 @@ static errno_t compare_report(cue_traverse_report_t* report, conversion_recs_t c
 
 errno_t test_cue_traverse(void) {
   cue_traverse_visitor_t visitor;
-  cue_traverse_visitor_opts_t visitor_opts;
+  cue_traverse_visitor_opts_t visitor_opts = { 0 };
   cue_traverse_report_writer_t writer;
   array_line_writer_t line_writer;
   null_line_writer_t null_line_writer;
@@ -636,5 +636,10 @@ errno_t test_cue_convert(void) {
 
   printf("%s\n", err ? "FAILED!" : "passed.");
 
+  return err;
+}
+
+errno_t test_cue_overwrite(void) {
+  errno_t err = 0;
   return err;
 }

@@ -103,7 +103,7 @@ static short traverse_dir_internal(
       ERR_REGION_NULL_CHECK_CODE(entry, keep_traversing, 0);
 
       if (!should_visit(entry)) {
-        ERR_EXIT()
+        ERR_REGION_EXIT()
       }
 
       handler_state.entry = entry;

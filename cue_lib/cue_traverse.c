@@ -67,13 +67,29 @@ static short ctv_visit(directory_traversal_handler_i* self_i, directory_traversa
       );
       ERR_REGION_NULL_CHECK_CODE(src_path, keep_traversing, 0);
 
-      msg = msnprintf("%s%s", "Processing ", src_path);
-      ERR_REGION_NULL_CHECK_CODE(msg, keep_traversing, 0);
-      ERR_REGION_CMP_CHECK_CODE(! writer->write_line(writer, msg), keep_traversing, 0);
-      SAFE_FREE(msg);
+      ERR_REGION_CMP_CHECK_CODE(
+        ! line_writer_write_fmt(writer, "%s%s", "Processing ", src_path), 
+        keep_traversing, 0);
 
       dst_path = make_path_with_history(self->target_path, history);
       ERR_REGION_NULL_CHECK_CODE(dst_path, keep_traversing, 0);
+
+      // if the destination already exists, and we are not in overwrite mode,
+      // just terminate this visit
+
+      if (file_exists(dst_path)) {
+        if (!self->overwrite) {
+          ERR_REGION_CMP_CHECK_CODE(
+            !line_writer_write_fmt(writer, "%s%s", "  ", "skipping, already exists."),
+            keep_traversing, 0);
+          ERR_REGION_EXIT();
+        }
+        else {
+          ERR_REGION_CMP_CHECK_CODE(
+            !line_writer_write_fmt(writer, "%s%s", "  ", "overwriting... "),
+            keep_traversing, 0);
+        }
+      }
 
       record = cue_traverse_record_alloc_with_paths(dst_path, src_path);
       ERR_REGION_NULL_CHECK_CODE(record, keep_traversing, 0);
@@ -85,10 +101,9 @@ static short ctv_visit(directory_traversal_handler_i* self_i, directory_traversa
       // try to convert
       transformed = convert_record(record, self->report_only) == 0;
 
-      msg = msnprintf("%s%s", "  ", transformed ? "Success." : "FAILED!");
-      ERR_REGION_NULL_CHECK_CODE(msg, keep_traversing, 0);
-      ERR_REGION_CMP_CHECK_CODE(!writer->write_line(writer, msg), keep_traversing, 0);
-      SAFE_FREE(msg);
+      ERR_REGION_CMP_CHECK_CODE(
+        !line_writer_write_fmt(writer, "%s%s", "  ", transformed ? "Success." : "FAILED!"), 
+        keep_traversing, 0);
 
       // add the appropriate report category
       added = cue_traverse_report_add_record(report, record, transformed);
@@ -121,6 +136,7 @@ errno_t cue_traverse_visitor_init(cue_traverse_visitor_t* self,
     self->handler_i.self = self;
     self->handler_i.visit = ctv_visit;
     self->report_only = opts->report_only;
+    self->overwrite = opts->overwrite;
     self->writer = opts->writer;
 
     ERR_REGION_NULL_CHECK(target_path_str = _strdup(opts->target_path), err);

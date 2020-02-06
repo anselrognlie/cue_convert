@@ -2,11 +2,11 @@
 
 #define ERR_REGION_BEGIN() do
 #define ERR_REGION_END() while(0);
-#define ERR_EXIT() break;
+#define ERR_REGION_EXIT() break;
 
 #define ERR_REGION_NULL_EXIT(arg) \
   if (!(arg)) { \
-    ERR_EXIT() \
+    ERR_REGION_EXIT() \
   }
 
 #define ERR_REGION_NULL_CHECK(arg, err) \
@@ -15,17 +15,17 @@
 #define ERR_REGION_NULL_CHECK_CODE(arg, err, code) \
   if (!(arg)) { \
     err = (code); \
-    ERR_EXIT() \
+    ERR_REGION_EXIT() \
   }
 
 #define ERR_REGION_ERROR_EXIT(arg) \
   if (arg) { \
-    ERR_EXIT() \
+    ERR_REGION_EXIT() \
   }
 
 #define ERR_REGION_ERROR_BUBBLE(arg) \
   if (arg) { \
-    ERR_EXIT() \
+    ERR_REGION_EXIT() \
   }
 
 #define ERR_REGION_ERROR_CHECK(arg, err) \
@@ -34,12 +34,12 @@
 #define ERR_REGION_ERROR_CHECK_CODE(arg, err, code) \
   if (arg) { \
     err = (code); \
-    ERR_EXIT() \
+    ERR_REGION_EXIT() \
   }
 
 #define ERR_REGION_CMP_EXIT(cmp) \
   if (cmp) { \
-    ERR_EXIT() \
+    ERR_REGION_EXIT() \
   }
 
 #define ERR_REGION_CMP_CHECK(cmp, err) \
@@ -48,7 +48,7 @@
 #define ERR_REGION_CMP_CHECK_CODE(cmp, err, code) \
   if ((cmp)) { \
     err = (code); \
-    ERR_EXIT() \
+    ERR_REGION_EXIT() \
   }
 
 #ifdef _WIN32
@@ -58,7 +58,7 @@
 
 #define ERR_REGION_INVALID_EXIT(arg) \
   if (INVALID_HANDLE_VALUE == (arg)) { \
-    ERR_EXIT() \
+    ERR_REGION_EXIT() \
   }
 
 #define ERR_REGION_INVALID_CHECK(arg, err) \
@@ -67,7 +67,7 @@
 #define ERR_REGION_INVALID_CHECK_CODE(arg, err, code) \
   if (INVALID_HANDLE_VALUE == (arg)) { \
     err = (code); \
-    ERR_EXIT() \
+    ERR_REGION_EXIT() \
   }
 
 #define ERR_IGNORE_WARNING(id, cmd) \

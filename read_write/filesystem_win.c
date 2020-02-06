@@ -415,4 +415,9 @@ errno_t copy_file(char const* src, char const* dst) {
   return err;
 }
 
+errno_t copy_dir(char const* src, char const* dst) {
+  errno_t err = 0;
+  return err;
+}
+
 #endif

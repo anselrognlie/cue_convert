@@ -44,6 +44,7 @@ int main(int argc, char const* argv[]) {
   result = test_cue_traverse() || result;
   result = test_cue_options() || result;
   result = test_cue_convert() || result;
+  result = test_cue_overwrite() || result;
 
   printf("%s\n", result ? "FAILURE!" : "All passed.");
 }

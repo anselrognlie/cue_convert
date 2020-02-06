@@ -3,6 +3,12 @@
 struct file_handle;
 struct directory_entry;
 struct string_vector;
+struct directory_traversal_handler;
+struct directory_traversal_handler_state;
+
+typedef short (*directory_traversal_callback)(
+  struct directory_traversal_handler* self,
+  struct directory_traversal_handler_state const* state);
 
 typedef struct directory_traversal_handler_state {
   struct file_handle* directory;
@@ -15,6 +21,6 @@ typedef struct directory_traversal_handler_state {
 typedef struct directory_traversal_handler {
   void* self;
   // return true to continue traversal, or false to halt
-  short (*visit)(struct directory_traversal_handler* self, directory_traversal_handler_state_t const* state);
-  short (*exit)(struct directory_traversal_handler* self, directory_traversal_handler_state_t const* state);
+  directory_traversal_callback visit;
+  directory_traversal_callback exit;
 } directory_traversal_handler_i;

@@ -243,7 +243,7 @@ errno_t test_parallel_traverse(void) {
   size_t result_len = sizeof(s_parallel_dirs) / sizeof(*s_parallel_dirs);
   parallel_traverse_visitor_init(&visitor, s_parallel_dir, s_parallel_dirs, result_len);
 
-  traverse_dir_path(s_test_dir, &visitor.handler_i);
+  traverse_dir_path(s_test_dir, &visitor.pv_t.handler_i);
 
   parallel_traverse_visitor_uninit(&visitor);
 
