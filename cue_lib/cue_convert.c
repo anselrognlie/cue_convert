@@ -14,7 +14,11 @@
 #include "cue_traverse_report_writer.h"
 #include "path.h"
 
-errno_t cue_convert(struct cue_options* opts, cue_convert_env_t* env) {
+errno_t cue_convert(
+  struct cue_options* opts, 
+  cue_convert_env_t* env,
+  cue_traverse_report_t **report_nullable) {
+
   errno_t err = 0;
   cue_traverse_visitor_t visitor = { 0 };
   file_line_writer_t file_writer = { 0 };
@@ -25,7 +29,7 @@ errno_t cue_convert(struct cue_options* opts, cue_convert_env_t* env) {
   cue_traverse_report_writer_t report_out_writer = { 0 };
   cue_traverse_report_t *report = 0;
   cue_traverse_visitor_opts_t visitor_opts = { 0 };
-  
+
   ERR_REGION_BEGIN() {
     if (opts->generate_report) {
       ERR_REGION_ERROR_CHECK(file_line_writer_init_path(&file_writer, opts->report_path), err);
@@ -57,6 +61,7 @@ errno_t cue_convert(struct cue_options* opts, cue_convert_env_t* env) {
     visitor_opts.source_path = opts->source_dir;
     visitor_opts.report_only = opts->test_only;
     visitor_opts.writer = selected_writer;
+    visitor_opts.overwrite = opts->overwrite;
 
     ERR_REGION_ERROR_CHECK(cue_traverse_visitor_init(
       &visitor,
@@ -73,6 +78,10 @@ errno_t cue_convert(struct cue_options* opts, cue_convert_env_t* env) {
     selected_writer->write_line(selected_writer, "");
     ERR_REGION_ERROR_CHECK(cue_traverse_report_writer_write(&report_out_writer, report), err);
 
+    if (report_nullable) {
+      *report_nullable = cue_traverse_visitor_detach_report(&visitor);
+    }
+
   } ERR_REGION_END()
 
   cue_traverse_report_writer_uninit(&report_file_writer);
@@ -85,7 +94,12 @@ errno_t cue_convert(struct cue_options* opts, cue_convert_env_t* env) {
   return err;
 }
 
-errno_t cue_convert_with_args(int argc, char const** argv, cue_convert_env_t* env) {
+errno_t cue_convert_with_args(
+  int argc, 
+  char const** argv, 
+  cue_convert_env_t* env,
+  cue_traverse_report_t** report_nullable) {
+  
   errno_t err = 0;
   cue_options_t *opts = 0;
   short show_help = 0;
@@ -95,7 +109,7 @@ errno_t cue_convert_with_args(int argc, char const** argv, cue_convert_env_t* en
     ERR_REGION_NULL_CHECK(opts = cue_options_alloc(), err);
     ERR_REGION_ERROR_CHECK_CODE(err = cue_options_load_from_args(opts, argc - 1, argv + 1), show_help, 1);
     
-    ERR_REGION_ERROR_CHECK(cue_convert(opts, env), err);
+    ERR_REGION_ERROR_CHECK(cue_convert(opts, env, report_nullable), err);
 
   } ERR_REGION_END()
 

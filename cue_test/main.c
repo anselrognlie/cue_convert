@@ -45,6 +45,7 @@ int main(int argc, char const* argv[]) {
   result = test_cue_options() || result;
   result = test_cue_convert() || result;
   result = test_cue_overwrite() || result;
+  result = test_copy_dir() || result;
 
   printf("%s\n", result ? "FAILURE!" : "All passed.");
 }

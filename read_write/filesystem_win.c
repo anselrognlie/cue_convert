@@ -17,6 +17,7 @@
 #include "directory_traversal_handler.h"
 #include "path.h"
 #include "err_helpers.h"
+#include "parallel_visitor.h"
 
 //#define PRINT_ONLY
 
@@ -415,8 +416,67 @@ errno_t copy_file(char const* src, char const* dst) {
   return err;
 }
 
+typedef struct {
+  parallel_visitor_t pv_t;
+} copy_dir_visitor_t;
+
+static short cdv_visit(parallel_visitor_t* self_t, parallel_visitor_state_t const* state) {
+
+  copy_dir_visitor_t* self = (copy_dir_visitor_t*)self_t->self;
+  file_handle_i const* directory = state->base_state->directory;
+  directory_entry_i const* entry = state->base_state->entry;
+
+  char const* src_path = 0;
+  char const *dst_path = state->parallel_path;
+  char const *dir = 0;
+  short keep_traversing = 1;
+  char const* parallel_path = state->parallel_path;
+
+  ERR_REGION_BEGIN() {
+    src_path = join_dir_file_path(
+      directory->get_path(directory),
+      entry->get_name(entry)
+    );
+    ERR_REGION_NULL_CHECK_CODE(src_path, keep_traversing, 0);
+
+    // make sure the target directory exists
+    dir = path_dir_part(dst_path);
+    ERR_REGION_NULL_CHECK_CODE(dir, keep_traversing, 0);
+    ERR_REGION_ERROR_CHECK_CODE(ensure_dir(dir), keep_traversing, 0);
+
+    // if directory, ensure it
+    // if file, copy it
+    if (entry->is_directory(entry)) {
+      ERR_REGION_ERROR_CHECK_CODE(ensure_dir(dst_path), keep_traversing, 0);
+    }
+    else {
+      ERR_REGION_ERROR_CHECK_CODE(copy_file(src_path, dst_path), keep_traversing, 0);
+    }
+  } ERR_REGION_END()
+
+  SAFE_FREE(dir);
+  SAFE_FREE(src_path);
+
+  return keep_traversing;
+}
+
+
 errno_t copy_dir(char const* src, char const* dst) {
   errno_t err = 0;
+  copy_dir_visitor_t visitor = {0};
+
+  // run a parallel traverse of the src dir, using that to build up the target
+  ERR_REGION_BEGIN() {
+    ERR_REGION_ERROR_CHECK(parallel_visitor_init(&visitor.pv_t, dst), err);
+    visitor.pv_t.self = &visitor;
+    visitor.pv_t.visit = cdv_visit;
+
+    ERR_REGION_CMP_CHECK(! traverse_dir_path(src, &visitor.pv_t.handler_i), err);
+
+  } ERR_REGION_END()
+
+  parallel_visitor_uninit(&visitor.pv_t);
+
   return err;
 }
 

@@ -21,5 +21,5 @@ int main(int argc, char const *argv[]) {
   env.out = stdout;
   env.err = stderr;
 
-  return cue_convert_with_args(argc, argv, &env);
+  return cue_convert_with_args(argc, argv, &env, 0);
 }

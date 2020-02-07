@@ -28,6 +28,6 @@ typedef struct cue_traverse_visitor {
 } cue_traverse_visitor_t;
 
 errno_t cue_traverse_visitor_init(cue_traverse_visitor_t* self, cue_traverse_visitor_opts_t const *opts);
-
+struct cue_traverse_report* cue_traverse_visitor_detach_report(cue_traverse_visitor_t* self);
 void cue_traverse_visitor_uninit(cue_traverse_visitor_t* self);
 

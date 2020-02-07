@@ -622,7 +622,7 @@ errno_t test_cue_convert(void) {
     ERR_REGION_ERROR_CHECK(cue_convert_with_args(
       argv->get_length(argv),
       argv->get_buffer(argv),
-      &env), err);
+      &env, 0), err);
 
     // make sure the expected directory structure exists
     compare_visitor_init(&cv, s_test_traverse_result, s_test_traverse_result_len);
@@ -641,5 +641,60 @@ errno_t test_cue_convert(void) {
 
 errno_t test_cue_overwrite(void) {
   errno_t err = 0;
+  string_vector_t* argv = 0;
+  cue_convert_env_t env;
+  cue_traverse_report_t *report = 0;
+
+  env.out = stdout;
+  env.err = stderr;
+
+  printf("Checking cue overwrite... ");
+
+  ERR_REGION_BEGIN() {
+
+    // copy over the src directory to cause an overwrite conflict
+    ERR_REGION_ERROR_CHECK(copy_dir(s_cue_src_dir, s_cue_trg_dir), err);
+
+    // do a convert run without overwrite, should convert nothing
+    ERR_REGION_NULL_CHECK(argv = string_vector_alloc(), err);
+    ERR_REGION_NULL_CHECK(argv->push(argv, "some_dir\\cue_tests"), err);
+    ERR_REGION_NULL_CHECK(argv->push(argv, "-q"), err);
+    ERR_REGION_NULL_CHECK(argv->push(argv, s_cue_src_dir), err);
+    ERR_REGION_NULL_CHECK(argv->push(argv, s_cue_trg_dir), err);
+
+    ERR_REGION_ERROR_CHECK(cue_convert_with_args(
+      argv->get_length(argv),
+      argv->get_buffer(argv),
+      &env, &report), err);
+
+    // make sure nothing was converted
+    ERR_REGION_NULL_CHECK(report, err);
+    ERR_REGION_CMP_CHECK(report->found_cue_count != 0, err);
+
+    // reset values to reuse
+    SAFE_FREE_HANDLER(report, cue_traverse_report_free);
+    report = 0;
+
+    // do the convert again, but with force
+    ERR_REGION_NULL_CHECK(argv->insert_at(argv, 2, "-f"), err);
+
+    ERR_REGION_ERROR_CHECK(cue_convert_with_args(
+      argv->get_length(argv),
+      argv->get_buffer(argv),
+      &env, &report), err);
+
+    // make sure the two items were converted
+    ERR_REGION_NULL_CHECK(report, err);
+    ERR_REGION_CMP_CHECK(report->found_cue_count != 2, err);
+    ERR_REGION_CMP_CHECK(report->transformed_cue_count != 2, err);
+
+  } ERR_REGION_END()
+
+  delete_dir(s_cue_trg_dir);
+  SAFE_FREE_HANDLER(argv, string_vector_free);
+  SAFE_FREE_HANDLER(report, cue_traverse_report_free);
+
+  printf("%s\n", err ? "FAILED!" : "passed.");
+
   return err;
 }

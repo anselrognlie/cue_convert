@@ -20,8 +20,6 @@
 
 #include "oggenc.h"
 
-static char * make_path_with_history(char const* root_path, string_vector_t const* history);
-static char * make_simple_path(char const *directory, char const*filename);
 static short is_cue_file(char const *filename);
 static errno_t convert_record(cue_traverse_record_t *record, short reort_only);
 static errno_t write_transformed_cue(cue_traverse_record_t const* record);
@@ -44,8 +42,8 @@ static short ctv_visit(parallel_visitor_t *self_t, parallel_visitor_state_t cons
   directory_entry_i const* entry = state->base_state->entry;
 
   short keep_traversing = 1;
-  char const * dst_path = 0;
-  char *src_path = 0;
+  char const *dst_path = 0;
+  char const *src_path = 0;
   cue_traverse_record_t* record = 0;
   cue_traverse_record_t const *added = 0;
   short transformed = 0;
@@ -60,7 +58,7 @@ static short ctv_visit(parallel_visitor_t *self_t, parallel_visitor_state_t cons
       writer = self->writer;
 
       // create a traverse record for this
-      src_path = make_simple_path(
+      src_path = join_dir_file_path(
         directory->get_path(directory),
         entry->get_name(entry)
       );
@@ -158,38 +156,10 @@ void cue_traverse_visitor_uninit(cue_traverse_visitor_t* self) {
   parallel_visitor_uninit(&self->pv_t);
 }
 
-static char * make_simple_path(char const* directory, char const* filename) {
-  char const* parts[] = { directory, filename };
-  return join_cstrs(parts, 2, k_path_separator);
-}
-
-static char * make_path_with_history(char const* root, string_vector_t const* history) {
-  char * path = 0;
-  char * parallel_path = 0;
-
-  ERR_REGION_BEGIN() {
-
-    path = join_cstrs(
-      history->get_buffer(history),
-      history->get_length(history),
-      k_path_separator);
-    ERR_REGION_NULL_CHECK_CODE(path, parallel_path, NULL);
-
-    ERR_REGION_NULL_CHECK_CODE(root, parallel_path, NULL);
-
-    parallel_path = make_simple_path(root, path);
-    ERR_REGION_NULL_CHECK_CODE(parallel_path, parallel_path, NULL);
-
-    SAFE_FREE(path);
-
-    return parallel_path;
-
-  } ERR_REGION_END()
-
-  SAFE_FREE(parallel_path);
-  SAFE_FREE(path);
-
-  return NULL;
+struct cue_traverse_report *cue_traverse_visitor_detach_report(cue_traverse_visitor_t* self) {
+  struct cue_traverse_report* report = self->report;
+  self->report = NULL;
+  return report;
 }
 
 static const char s_cue_suffix[] = ".cue";

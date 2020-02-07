@@ -18,6 +18,7 @@ static const char s_test_dir[] = "..\\test_data\\test_dir";
 static const char s_test_delete_dir[] = "..\\test_data\\ensure_dir";
 static const char s_test_ensure_dir[] = "..\\test_data\\ensure_dir\\a\\dir\\to\\ensure";
 static const char s_parallel_dir[] = "p:\\parallel_path";
+static const char s_copy_dir[] = "..\\test_data\\copy_dir";
 
 //#define PRINT_ONLY
 
@@ -250,4 +251,31 @@ errno_t test_parallel_traverse(void) {
   printf("%s\n", visitor.passed ? "passed." : "FAILED!");
 
   return visitor.passed ? 0 : -1;
+}
+
+errno_t test_copy_dir(void) {
+  errno_t err = 0;
+
+  printf("Checking directory copying... ");
+
+  compare_visitor_t visitor;
+
+  ERR_REGION_BEGIN() {
+
+    // configure as though listing the test dir, since we are making a copy
+    compare_visitor_init(&visitor, s_test_traverse_result, s_test_traverse_result_len);
+
+    ERR_REGION_ERROR_CHECK(copy_dir(s_test_dir, s_copy_dir), err);
+
+    traverse_dir_path(s_copy_dir, &visitor.handler_i);
+
+    ERR_REGION_CMP_CHECK(visitor.line != s_test_traverse_result_len, err);
+
+  } ERR_REGION_END()
+
+  delete_dir(s_copy_dir);
+
+  printf("%s\n", err ? "FAILED!" : "passed.");
+
+  return err;
 }
