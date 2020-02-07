@@ -6,16 +6,19 @@
 #include "mem_helpers.h"
 
 static const char k_help_message[] = 
-"[-tqf] [-r report_path] source_directory target_directory\n"
+"[-tQf] [-q quality] [-r report_path] source_directory target_directory\n"
 "\n"
 "-t - test mode - just examine the cues, don't convert\n"
-"-q - quiet mode - no console output\n"
+"-Q - quiet mode - no console output\n"
 "-f - force overwrite - force reconversion if a target cue file\n"
 "                       is already found\n"
 "-r report_path - report location - where the conversion report\n"
 "                 will be written.  If not supplied, the report\n"
 "                 will not be saved, but will still be written to\n"
 "                 the console if not in quiet mode.\n"
+"-q quality - compression quality - quality should be a number\n"
+"             between -1 (poorest) and 10 (best).  Fractional\n"
+"             values are permitted.  Defaults to 3.\n"
 "source_directory - location to start the conversion traversal\n"
 "target_directory - location to replicate the source directory\n"
 "                   structure, copying and converting as needed.\n"
@@ -63,8 +66,9 @@ errno_t cue_options_load_from_args(struct cue_options* self, int argc, char cons
   short quiet = 0;
   short test_only = 0;
   short overwrite = 0;
+  float quality = 3;
 
-  // -q -r <report.file> <src_dir> <trg_dir>
+  // -Q -r <report.file> <src_dir> <trg_dir>
 
   ERR_REGION_BEGIN() {
     short past_args = 0;
@@ -82,7 +86,7 @@ errno_t cue_options_load_from_args(struct cue_options* self, int argc, char cons
       ERR_REGION_CMP_CHECK((!*(arg + 1) || *(arg + 2)), err);
 
       switch (*(arg + 1)) {
-        case 'q':
+        case 'Q':
           quiet = 1;
         break;
 
@@ -100,6 +104,21 @@ errno_t cue_options_load_from_args(struct cue_options* self, int argc, char cons
           }
           else {
             report_path = argv[++i];
+          }
+        break;
+
+        case 'q':
+          if (i > argc - 2) {
+            err = -1;
+          }
+          else {
+            double d = atof(argv[++i]);
+            if (d < -1 || d > 10) {
+              err = -1;
+            }
+            else {
+              quality = (float)d;
+            }
           }
         break;
 
@@ -137,6 +156,7 @@ errno_t cue_options_load_from_args(struct cue_options* self, int argc, char cons
     self->quiet = quiet;
     self->test_only = test_only;
     self->overwrite = overwrite;
+    self->quality = quality;
 
     return err;
 

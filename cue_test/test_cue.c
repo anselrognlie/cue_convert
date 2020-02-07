@@ -470,6 +470,8 @@ typedef struct cue_options_test_result {
   char const* report_path;
   short quiet;
   short test_only;
+  short overwrite;
+  float quality;
 } cue_options_test_result_t;
 
 static errno_t compare_options_result(cue_options_t const* opts, cue_options_test_result_t const* result) {
@@ -486,6 +488,8 @@ static errno_t compare_options_result(cue_options_t const* opts, cue_options_tes
     ERR_REGION_CMP_CHECK(opts->generate_report != result->generate_report, err);
     ERR_REGION_CMP_CHECK(opts->quiet != result->quiet, err);
     ERR_REGION_CMP_CHECK(opts->test_only != result->test_only, err);
+    ERR_REGION_CMP_CHECK(opts->overwrite != result->overwrite, err);
+    ERR_REGION_CMP_CHECK(opts->quality != result->quality, err);
 
   } ERR_REGION_END()
 
@@ -506,7 +510,7 @@ errno_t test_cue_options(void) {
       ERR_REGION_ERROR_CHECK(cue_options_init(&opts), err);
 
       char const *argv[] = {
-        "-q",
+        "-Q",
         "-r",
         "report path",
         "src dir",
@@ -521,6 +525,8 @@ errno_t test_cue_options(void) {
         .report_path = "report path",
         .quiet = 1,
         .test_only = 0,
+        .overwrite = 0,
+        .quality = 3,
       };
 
       ERR_REGION_ERROR_CHECK(cue_options_load_from_args(&opts, argc, argv), err);
@@ -543,6 +549,7 @@ errno_t test_cue_options(void) {
       cue_options_test_result_t result = {
         .source_dir = "src dir",
         .target_dir = "trg dir",
+        .quality = 3,
       };
 
       ERR_REGION_ERROR_CHECK(cue_options_load_from_args(&opts, argc, argv), err);
@@ -615,7 +622,9 @@ errno_t test_cue_convert(void) {
     
     ERR_REGION_NULL_CHECK(argv = string_vector_alloc(), err);
     ERR_REGION_NULL_CHECK(argv->push(argv, "some_dir\\cue_tests"), err);
+    ERR_REGION_NULL_CHECK(argv->push(argv, "-Q"), err);
     ERR_REGION_NULL_CHECK(argv->push(argv, "-q"), err);
+    ERR_REGION_NULL_CHECK(argv->push(argv, "5"), err);
     ERR_REGION_NULL_CHECK(argv->push(argv, s_cue_src_dir), err);
     ERR_REGION_NULL_CHECK(argv->push(argv, s_cue_trg_dir), err);
 
@@ -658,7 +667,7 @@ errno_t test_cue_overwrite(void) {
     // do a convert run without overwrite, should convert nothing
     ERR_REGION_NULL_CHECK(argv = string_vector_alloc(), err);
     ERR_REGION_NULL_CHECK(argv->push(argv, "some_dir\\cue_tests"), err);
-    ERR_REGION_NULL_CHECK(argv->push(argv, "-q"), err);
+    ERR_REGION_NULL_CHECK(argv->push(argv, "-Q"), err);
     ERR_REGION_NULL_CHECK(argv->push(argv, s_cue_src_dir), err);
     ERR_REGION_NULL_CHECK(argv->push(argv, s_cue_trg_dir), err);
 

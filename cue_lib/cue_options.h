@@ -10,6 +10,7 @@ typedef struct cue_options {
   short quiet;
   short test_only;
   short overwrite;
+  float quality;
 } cue_options_t;
 
 struct cue_options* cue_options_alloc();

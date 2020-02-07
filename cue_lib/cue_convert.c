@@ -62,6 +62,7 @@ errno_t cue_convert(
     visitor_opts.report_only = opts->test_only;
     visitor_opts.writer = selected_writer;
     visitor_opts.overwrite = opts->overwrite;
+    visitor_opts.quality = opts->quality;
 
     ERR_REGION_ERROR_CHECK(cue_traverse_visitor_init(
       &visitor,
