@@ -31,9 +31,13 @@ typedef struct cue_sheet_parse_result {
   cue_status_info_vector_t* errors;
 } cue_sheet_parse_result_t;
 
-struct cue_status_info* cue_status_info_alloc(
+struct cue_status_info* cue_status_info_alloc_parse_error(
   size_t line_num,
   char const* line);
+struct cue_status_info* cue_status_info_alloc_error(
+  char const* msg);
+struct cue_status_info* cue_status_info_alloc_status(
+  char const* msg);
 errno_t cue_status_info_init_parse_error(struct cue_status_info* self,
   size_t line_num,
   char const* line);

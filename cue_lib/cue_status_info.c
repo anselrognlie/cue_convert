@@ -24,7 +24,9 @@ static void* acquire(void const* instance) {
 
 IMPLEMENT_OBJECT_VECTOR(cue_status_info_vector, cue_status_info_t);
 
-struct cue_status_info* cue_status_info_alloc(
+static errno_t set_detail(cue_status_info_t *self, char const *detail);
+
+struct cue_status_info* cue_status_info_alloc_parse_error(
   size_t line_num,
   char const* line) {
   struct cue_status_info* self = malloc(sizeof(*self));
@@ -37,43 +39,77 @@ struct cue_status_info* cue_status_info_alloc(
   return NULL;
 }
 
+struct cue_status_info* cue_status_info_alloc_error(
+  char const* msg) {
+  struct cue_status_info* self = malloc(sizeof(*self));
+  if (!self) return NULL;
+
+  errno_t err = cue_status_info_init_error(self, msg);
+  if (!err) return self;
+
+  SAFE_FREE(self);
+  return NULL;
+}
+
+struct cue_status_info* cue_status_info_alloc_status(
+  char const* msg) {
+  struct cue_status_info* self = malloc(sizeof(*self));
+  if (!self) return NULL;
+
+  errno_t err = cue_status_info_init_status(self, msg);
+  if (!err) return self;
+
+  SAFE_FREE(self);
+  return NULL;
+}
+
 errno_t cue_status_info_init_parse_error(struct cue_status_info* self,
   size_t line_num,
   char const* line) {
-  memset(self, 0, sizeof(*self));
 
-  char const *buf = _strdup(line);
-  if (!buf) return -1;
+  errno_t err = 0;
 
-  self->detail = buf;
-  self->line_num = line_num;
-  self->type = EWC_CST_PARSE_ERROR;
+  ERR_REGION_BEGIN() {
+    memset(self, 0, sizeof(*self));
 
-  return 0;
+    ERR_REGION_ERROR_CHECK(set_detail(self, line), err);
+
+    self->line_num = line_num;
+    self->type = EWC_CST_PARSE_ERROR;
+
+  } ERR_REGION_END()
+
+  return err;
 }
 
 errno_t cue_status_info_init_error(struct cue_status_info* self, char const* msg) {
-  memset(self, 0, sizeof(*self));
+  errno_t err = 0;
 
-  char const* buf = _strdup(msg);
-  if (!buf) return -1;
+  ERR_REGION_BEGIN() {
+    memset(self, 0, sizeof(*self));
 
-  self->detail = buf;
-  self->type = EWC_CST_ERROR;
+    ERR_REGION_ERROR_CHECK(set_detail(self, msg), err);
 
-  return 0;
+    self->type = EWC_CST_ERROR;
+
+  } ERR_REGION_END()
+
+  return err;
 }
 
 errno_t cue_status_info_init_status(struct cue_status_info* self, char const* msg) {
-  memset(self, 0, sizeof(*self));
+  errno_t err = 0;
 
-  char const* buf = _strdup(msg);
-  if (!buf) return -1;
+  ERR_REGION_BEGIN() {
+    memset(self, 0, sizeof(*self));
 
-  self->detail = buf;
-  self->type = EWC_CST_STATUS;
+    ERR_REGION_ERROR_CHECK(set_detail(self, msg), err);
 
-  return 0;
+    self->type = EWC_CST_STATUS;
+
+  } ERR_REGION_END()
+
+  return err;
 }
 
 void cue_status_info_uninit(struct cue_status_info* self) {
@@ -128,7 +164,7 @@ struct cue_status_info const* cue_sheet_parse_result_add_error(
 
   ERR_REGION_BEGIN() {
 
-    error = cue_status_info_alloc(line_num, line);
+    error = cue_status_info_alloc_parse_error(line_num, line);
     ERR_REGION_NULL_CHECK(error, err);
 
     added = self->errors->push(self->errors, error);
@@ -146,3 +182,13 @@ struct cue_status_info const* cue_sheet_parse_result_add_error(
 
 }
 
+static errno_t set_detail(cue_status_info_t* self, char const* detail) {
+  char const *buf = _strdup(detail);
+  if (! buf) return -1;
+
+  char const *old_buf = self->detail;
+  SAFE_FREE(old_buf);
+
+  self->detail = buf;
+  return 0;
+}
