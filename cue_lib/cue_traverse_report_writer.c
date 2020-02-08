@@ -69,17 +69,17 @@ errno_t cue_traverse_report_writer_write(
         written = line_writer_write_fmt(writer, "%s%s", "    ", "Errors:");
         if (!written) break;  // break out of record loop
 
-        cue_sheet_parse_error_vector_t* errors = record->result->errors;
+        cue_status_info_vector_t* errors = record->result->errors;
         for (size_t j = 0; j < errors->get_length(errors); ++j) {
           cue_status_info_t const *error = errors->get(errors, j);
           if (error->line_num) {
             written = line_writer_write_fmt(writer, "%s%d%s%s", "      ",
-              error->line_num, ": ", error->line);
+              error->line_num, ": ", error->detail);
           }
           else
           {
             written = line_writer_write_fmt(writer, "%s%s%s%s", "      ",
-              "*", " ", error->line);
+              "*", " ", error->detail);
           }
           if (!written) break;  // break out of error loop
         }

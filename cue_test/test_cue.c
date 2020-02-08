@@ -261,7 +261,7 @@ static short compare_result_arrays(
 
   if (error_len > 0 && ! result->has_errors) return 0;
 
-  cue_sheet_parse_error_vector_t *errors = result->errors;
+  cue_status_info_vector_t *errors = result->errors;
   size_t result_len = errors->get_length(errors);
   if (error_len != result_len) return 0;
 
@@ -270,7 +270,7 @@ static short compare_result_arrays(
     cue_status_info_t const *res_rec = errors->get(errors, i);
 
     if (err_rec.line_num != res_rec->line_num) return 0;
-    if (strcmp(err_rec.line, res_rec->line) != 0) return 0;
+    if (strcmp(err_rec.line, res_rec->detail) != 0) return 0;
   }
 
   return 1;
