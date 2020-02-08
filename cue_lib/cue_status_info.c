@@ -122,18 +122,18 @@ void cue_status_info_free(struct cue_status_info* self) {
 }
 
 
-struct cue_sheet_parse_result* cue_sheet_parse_result_alloc() {
-  struct cue_sheet_parse_result* self = malloc(sizeof(*self));
+struct cue_sheet_process_result* cue_sheet_process_result_alloc() {
+  struct cue_sheet_process_result* self = malloc(sizeof(*self));
   if (! self) return NULL;
 
-  errno_t err = cue_sheet_parse_result_init(self);
+  errno_t err = cue_sheet_process_result_init(self);
   if (! err) return self;
 
   SAFE_FREE(self);
   return NULL;
 }
 
-errno_t cue_sheet_parse_result_init(struct cue_sheet_parse_result* self) {
+errno_t cue_sheet_process_result_init(struct cue_sheet_process_result* self) {
   memset(self, 0, sizeof(*self));
 
   cue_status_info_vector_t *vector = cue_status_info_vector_alloc();
@@ -144,17 +144,17 @@ errno_t cue_sheet_parse_result_init(struct cue_sheet_parse_result* self) {
   return 0;
 }
 
-void cue_sheet_parse_result_uninit(struct cue_sheet_parse_result* self) {
+void cue_sheet_process_result_uninit(struct cue_sheet_process_result* self) {
   self->errors->free(self->errors);
 }
 
-void cue_sheet_parse_result_free(struct cue_sheet_parse_result* self) {
-  cue_sheet_parse_result_uninit(self);
+void cue_sheet_process_result_free(struct cue_sheet_process_result* self) {
+  cue_sheet_process_result_uninit(self);
   SAFE_FREE(self);
 }
 
-struct cue_status_info const* cue_sheet_parse_result_add_error(
-  struct cue_sheet_parse_result* self,
+struct cue_status_info const* cue_sheet_process_result_add_error(
+  struct cue_sheet_process_result* self,
   size_t line_num,
   char const* line) {
 

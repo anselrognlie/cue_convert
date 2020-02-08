@@ -26,10 +26,10 @@ typedef struct cue_status_info_vector {
 
 DECLARE_OBJECT_VECTOR(cue_status_info_vector, cue_status_info_t);
 
-typedef struct cue_sheet_parse_result {
+typedef struct cue_sheet_process_result {
   short has_errors;
   cue_status_info_vector_t* errors;
-} cue_sheet_parse_result_t;
+} cue_sheet_process_result_t;
 
 struct cue_status_info* cue_status_info_alloc_parse_error(
   size_t line_num,
@@ -48,12 +48,12 @@ errno_t cue_status_info_init_status(struct cue_status_info* self,
 void cue_status_info_uninit(struct cue_status_info* self);
 void cue_status_info_free(struct cue_status_info* self);
 
-struct cue_sheet_parse_result* cue_sheet_parse_result_alloc();
-errno_t cue_sheet_parse_result_init(struct cue_sheet_parse_result* self);
-void cue_sheet_parse_result_uninit(struct cue_sheet_parse_result* self);
-void cue_sheet_parse_result_free(struct cue_sheet_parse_result* self);
+struct cue_sheet_process_result* cue_sheet_process_result_alloc();
+errno_t cue_sheet_process_result_init(struct cue_sheet_process_result* self);
+void cue_sheet_process_result_uninit(struct cue_sheet_process_result* self);
+void cue_sheet_process_result_free(struct cue_sheet_process_result* self);
 
-struct cue_status_info const* cue_sheet_parse_result_add_error(
-  struct cue_sheet_parse_result* self,
+struct cue_status_info const* cue_sheet_process_result_add_error(
+  struct cue_sheet_process_result* self,
   size_t line_num,
   char const* line);

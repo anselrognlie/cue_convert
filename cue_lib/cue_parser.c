@@ -23,15 +23,15 @@ static char const* parse_int_token(char const* buf, int* number);
 static char const* parse_track_mode(char const* buf, cue_track_mode_t* mode);
 static char const* ctm2str(cue_track_mode_t mode);
 static char const* parse_time(char const* buf, cue_time_t *time);
-static void safe_add_error(cue_sheet_parse_result_t *result, size_t line_num, char const *line);
+static void safe_add_error(cue_sheet_process_result_t *result, size_t line_num, char const *line);
 
-cue_sheet_t* cue_sheet_parse_file(FILE* fid, struct cue_sheet_parse_result* result_opt) {
+cue_sheet_t* cue_sheet_parse_file(FILE* fid, struct cue_sheet_process_result* result_opt) {
   file_line_reader_t line_reader;
   file_line_reader_init_fid(&line_reader, fid);
   return cue_sheet_parse(&line_reader.line_reader, result_opt);
 }
 
-cue_sheet_t* cue_sheet_parse_filename(char const* filename, struct cue_sheet_parse_result* result_opt) {
+cue_sheet_t* cue_sheet_parse_filename(char const* filename, struct cue_sheet_process_result* result_opt) {
   FILE* cue_in;
   errno_t result = fopen_s(&cue_in, filename, "rb");
   if (!cue_in) {
@@ -48,7 +48,7 @@ cue_sheet_t* cue_sheet_parse_filename(char const* filename, struct cue_sheet_par
 
 #define LOG_AND_BREAK() { safe_add_error(result_opt, line_num, line); has_errors = 1; break; }
 
-cue_sheet_t* cue_sheet_parse(line_reader_i *reader, struct cue_sheet_parse_result* result_opt) {
+cue_sheet_t* cue_sheet_parse(line_reader_i *reader, struct cue_sheet_process_result* result_opt) {
   char const *line = 0;
   size_t bytes;
   size_t line_num = 0;
@@ -524,8 +524,8 @@ static char const* parse_time(char const* buf, cue_time_t* time) {
   return next;
 }
 
-static void safe_add_error(cue_sheet_parse_result_t* result, size_t line_num, char const* line) {
+static void safe_add_error(cue_sheet_process_result_t* result, size_t line_num, char const* line) {
   if (! result) return;
 
-  cue_sheet_parse_result_add_error(result, line_num, line);
+  cue_sheet_process_result_add_error(result, line_num, line);
 }

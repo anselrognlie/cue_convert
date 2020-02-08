@@ -255,7 +255,7 @@ errno_t test_cue_transform(void) {
 }
 
 static short compare_result_arrays(
-  cue_sheet_parse_result_t const* result,
+  cue_sheet_process_result_t const* result,
   error_test_record_t const *output,
   size_t error_len) {
 
@@ -278,7 +278,7 @@ static short compare_result_arrays(
 
 errno_t test_cue_errors(void) {
   errno_t err = 0;
-  cue_sheet_parse_result_t *result = 0;
+  cue_sheet_process_result_t *result = 0;
   array_line_reader_t reader;
   cue_sheet_t* sheet = 0;
 
@@ -286,7 +286,7 @@ errno_t test_cue_errors(void) {
 
     printf("Checking cue errors... ");
 
-    result = cue_sheet_parse_result_alloc();
+    result = cue_sheet_process_result_alloc();
     ERR_REGION_NULL_CHECK(result, err);
 
     array_line_reader_init_lines(&reader, GET_SIZE(s_error_sheet));
@@ -300,7 +300,7 @@ errno_t test_cue_errors(void) {
   printf("%s\n", err ? "FAILED!" : "passed.");
 
   SAFE_FREE_HANDLER(sheet, cue_sheet_free);
-  SAFE_FREE_HANDLER(result, cue_sheet_parse_result_free);
+  SAFE_FREE_HANDLER(result, cue_sheet_process_result_free);
 
   return err;
 }

@@ -4,14 +4,14 @@
 
 #include <stddef.h>
 
-struct cue_sheet_parse_result;
+struct cue_sheet_process_result;
 
 typedef struct cue_traverse_record {
   char const *target_path;
   struct cue_sheet* target_sheet;
   char const *source_path;
   struct cue_sheet* source_sheet;
-  struct cue_sheet_parse_result *result;
+  struct cue_sheet_process_result *result;
 } cue_traverse_record_t;
 
 cue_traverse_record_t* cue_traverse_record_alloc(void);
