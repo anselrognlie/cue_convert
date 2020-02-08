@@ -22,12 +22,12 @@ static void* acquire(void const* instance) {
   return (void *)instance;
 }
 
-IMPLEMENT_OBJECT_VECTOR(cue_sheet_parse_error_vector, cue_sheet_parse_error_t);
+IMPLEMENT_OBJECT_VECTOR(cue_sheet_parse_error_vector, cue_status_info_t);
 
-struct cue_sheet_parse_error* cue_sheet_parse_error_alloc(
+struct cue_status_info* cue_sheet_parse_error_alloc(
   size_t line_num,
   char const* line) {
-  struct cue_sheet_parse_error* self = malloc(sizeof(*self));
+  struct cue_status_info* self = malloc(sizeof(*self));
   if (!self) return NULL;
 
   errno_t err = cue_sheet_parse_error_init(self, line_num, line);
@@ -37,7 +37,7 @@ struct cue_sheet_parse_error* cue_sheet_parse_error_alloc(
   return NULL;
 }
 
-errno_t cue_sheet_parse_error_init(struct cue_sheet_parse_error* self,
+errno_t cue_sheet_parse_error_init(struct cue_status_info* self,
   size_t line_num,
   char const* line) {
   memset(self, 0, sizeof(*self));
@@ -51,11 +51,11 @@ errno_t cue_sheet_parse_error_init(struct cue_sheet_parse_error* self,
   return 0;
 }
 
-void cue_sheet_parse_error_uninit(struct cue_sheet_parse_error* self) {
+void cue_sheet_parse_error_uninit(struct cue_status_info* self) {
   SAFE_FREE(self->line);
 }
 
-void cue_sheet_parse_error_free(struct cue_sheet_parse_error* self) {
+void cue_sheet_parse_error_free(struct cue_status_info* self) {
   cue_sheet_parse_error_uninit(self);
   SAFE_FREE(self);
 }
@@ -92,14 +92,14 @@ void cue_sheet_parse_result_free(struct cue_sheet_parse_result* self) {
   SAFE_FREE(self);
 }
 
-struct cue_sheet_parse_error const* cue_sheet_parse_result_add_error(
+struct cue_status_info const* cue_sheet_parse_result_add_error(
   struct cue_sheet_parse_result* self,
   size_t line_num,
   char const* line) {
 
   errno_t err = 0;
-  cue_sheet_parse_error_t* error = 0;
-  cue_sheet_parse_error_t const* added = 0;
+  cue_status_info_t* error = 0;
+  cue_status_info_t const* added = 0;
 
   ERR_REGION_BEGIN() {
 

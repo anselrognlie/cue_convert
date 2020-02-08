@@ -71,7 +71,7 @@ errno_t cue_traverse_report_writer_write(
 
         cue_sheet_parse_error_vector_t* errors = record->result->errors;
         for (size_t j = 0; j < errors->get_length(errors); ++j) {
-          cue_sheet_parse_error_t const *error = errors->get(errors, j);
+          cue_status_info_t const *error = errors->get(errors, j);
           if (error->line_num) {
             written = line_writer_write_fmt(writer, "%s%d%s%s", "      ",
               error->line_num, ": ", error->line);

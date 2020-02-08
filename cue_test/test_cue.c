@@ -267,7 +267,7 @@ static short compare_result_arrays(
 
   for (size_t i = 0; i < error_len; ++i) {
     error_test_record_t err_rec = output[i];
-    cue_sheet_parse_error_t const *res_rec = errors->get(errors, i);
+    cue_status_info_t const *res_rec = errors->get(errors, i);
 
     if (err_rec.line_num != res_rec->line_num) return 0;
     if (strcmp(err_rec.line, res_rec->line) != 0) return 0;
