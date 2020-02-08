@@ -30,14 +30,14 @@ struct cue_status_info* cue_status_info_alloc(
   struct cue_status_info* self = malloc(sizeof(*self));
   if (!self) return NULL;
 
-  errno_t err = cue_status_info_init(self, line_num, line);
+  errno_t err = cue_status_info_init_parse_error(self, line_num, line);
   if (!err) return self;
 
   SAFE_FREE(self);
   return NULL;
 }
 
-errno_t cue_status_info_init(struct cue_status_info* self,
+errno_t cue_status_info_init_parse_error(struct cue_status_info* self,
   size_t line_num,
   char const* line) {
   memset(self, 0, sizeof(*self));
@@ -47,6 +47,31 @@ errno_t cue_status_info_init(struct cue_status_info* self,
 
   self->detail = buf;
   self->line_num = line_num;
+  self->type = EWC_CST_PARSE_ERROR;
+
+  return 0;
+}
+
+errno_t cue_status_info_init_error(struct cue_status_info* self, char const* msg) {
+  memset(self, 0, sizeof(*self));
+
+  char const* buf = _strdup(msg);
+  if (!buf) return -1;
+
+  self->detail = buf;
+  self->type = EWC_CST_ERROR;
+
+  return 0;
+}
+
+errno_t cue_status_info_init_status(struct cue_status_info* self, char const* msg) {
+  memset(self, 0, sizeof(*self));
+
+  char const* buf = _strdup(msg);
+  if (!buf) return -1;
+
+  self->detail = buf;
+  self->type = EWC_CST_STATUS;
 
   return 0;
 }

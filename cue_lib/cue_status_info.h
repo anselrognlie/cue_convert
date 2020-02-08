@@ -5,8 +5,9 @@
 #include "object_vector.h"
 
 typedef enum cue_status_type {
-  EWC_CST_PARSE_ERROR = 0,
-  EWC_CST_STATUS,
+  EWC_CST_STATUS = 0,
+  EWC_CST_ERROR,
+  EWC_CST_PARSE_ERROR,
   EWC_CST_LAST,
 } cue_status_type_t;
 
@@ -33,9 +34,13 @@ typedef struct cue_sheet_parse_result {
 struct cue_status_info* cue_status_info_alloc(
   size_t line_num,
   char const* line);
-errno_t cue_status_info_init(struct cue_status_info* self,
+errno_t cue_status_info_init_parse_error(struct cue_status_info* self,
   size_t line_num,
-  char const *line);
+  char const* line);
+errno_t cue_status_info_init_error(struct cue_status_info* self,
+  char const* msg);
+errno_t cue_status_info_init_status(struct cue_status_info* self,
+  char const* msg);
 void cue_status_info_uninit(struct cue_status_info* self);
 void cue_status_info_free(struct cue_status_info* self);
 
