@@ -42,7 +42,6 @@ errno_t cue_traverse_report_writer_write(
 
   line_writer_i *writer = self->writer;
   errno_t err = 0;
-  size_t written = 1;
 
   ERR_REGION_BEGIN() {
 
@@ -52,43 +51,34 @@ errno_t cue_traverse_report_writer_write(
 
     for (int i = 0; i < report->transformed_cue_count; ++i) {
       cue_traverse_record_t const* record = report->transformed_list->get(report->transformed_list, i);
-      written = line_writer_write_fmt(writer, "%s%s%s%s", "  ", record->source_path, " -> ", record->target_path);
-      if (! written) break;
-    }
-    ERR_REGION_CMP_CHECK(!written, err);
+      ERR_REGION_CMP_CHECK(!line_writer_write_fmt(writer, "%s%s%s%s", "  ", record->source_path, " -> ", record->target_path), err);
+    } ERR_REGION_ERROR_BUBBLE(err)
 
     ERR_REGION_CMP_CHECK(!line_writer_write_fmt(writer, "%s%d", "Transformed total: ", report->transformed_cue_count), err);
     ERR_REGION_CMP_CHECK(!line_writer_write_fmt(writer, "%s", "Failed files:"), err);
 
     for (int i = 0; i < report->failed_cue_count; ++i) {
       cue_traverse_record_t const* record = report->failed_list->get(report->failed_list, i);
-      written = line_writer_write_fmt(writer, "%s%s%s%s", "  ", record->source_path, " -> ", record->target_path);
-      if (!written) break;  // break out of record loop
+      ERR_REGION_CMP_CHECK(!line_writer_write_fmt(writer, "%s%s%s%s", "  ", record->source_path, " -> ", record->target_path), err);
 
       if (record->result->has_errors) {
-        written = line_writer_write_fmt(writer, "%s%s", "    ", "Errors:");
-        if (!written) break;  // break out of record loop
+        ERR_REGION_CMP_CHECK(!line_writer_write_fmt(writer, "%s%s", "    ", "Errors:"), err);
 
-        cue_status_info_vector_t* errors = record->result->errors;
-        for (size_t j = 0; j < errors->get_length(errors); ++j) {
-          cue_status_info_t const *error = errors->get(errors, j);
-          if (error->line_num) {
-            written = line_writer_write_fmt(writer, "%s%d%s%s", "      ",
-              error->line_num, ": ", error->detail);
+        cue_status_info_vector_t* info_list = record->result->info_list;
+        for (size_t j = 0; j < info_list->get_length(info_list); ++j) {
+          cue_status_info_t const *info = info_list->get(info_list, j);
+          if (info->type == EWC_CST_PARSE_ERROR) {
+            ERR_REGION_CMP_CHECK(!line_writer_write_fmt(writer, "%s%d%s%s", "      ",
+              info->line_num, ": ", info->detail), err);
           }
-          else
+          else if (info->type == EWC_CST_ERROR)
           {
-            written = line_writer_write_fmt(writer, "%s%s%s%s", "      ",
-              "*", " ", error->detail);
+            ERR_REGION_CMP_CHECK(!line_writer_write_fmt(writer, "%s%s%s%s", "      ",
+              "!", " ", info->detail), err);
           }
-          if (!written) break;  // break out of error loop
-        }
-        if (!written) break;  // break out of record loop
+        } ERR_REGION_ERROR_BUBBLE(err)
       }
-    }
-
-    // translate an early breakout into an error
-    ERR_REGION_CMP_CHECK(!written, err);
+    } ERR_REGION_ERROR_BUBBLE(err)
 
     ERR_REGION_CMP_CHECK(!line_writer_write_fmt(writer, "%s%d", "Failed total: ", report->failed_cue_count), err);
 

@@ -208,7 +208,7 @@ static errno_t convert_record(cue_traverse_visitor_t* self, cue_traverse_record_
         buf = msnprintf("Failed to create cue file: %s", trg_path);
         ERR_REGION_NULL_CHECK(buf, err);
 
-        ERR_REGION_NULL_CHECK(cue_sheet_process_result_add_error(record->result, 0, buf), err);
+        ERR_REGION_NULL_CHECK(cue_sheet_process_result_add_error(record->result, buf), err);
         SAFE_FREE(buf);
       }
 

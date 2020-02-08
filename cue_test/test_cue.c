@@ -261,7 +261,7 @@ static short compare_result_arrays(
 
   if (error_len > 0 && ! result->has_errors) return 0;
 
-  cue_status_info_vector_t *errors = result->errors;
+  cue_status_info_vector_t *errors = result->info_list;
   size_t result_len = errors->get_length(errors);
   if (error_len != result_len) return 0;
 

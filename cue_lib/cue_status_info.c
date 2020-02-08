@@ -139,13 +139,13 @@ errno_t cue_sheet_process_result_init(struct cue_sheet_process_result* self) {
   cue_status_info_vector_t *vector = cue_status_info_vector_alloc();
   if (! vector) return -1;
 
-  self->errors = vector;
+  self->info_list = vector;
 
   return 0;
 }
 
 void cue_sheet_process_result_uninit(struct cue_sheet_process_result* self) {
-  self->errors->free(self->errors);
+  self->info_list->free(self->info_list);
 }
 
 void cue_sheet_process_result_free(struct cue_sheet_process_result* self) {
@@ -153,7 +153,7 @@ void cue_sheet_process_result_free(struct cue_sheet_process_result* self) {
   SAFE_FREE(self);
 }
 
-struct cue_status_info const* cue_sheet_process_result_add_error(
+struct cue_status_info const* cue_sheet_process_result_add_parse_error(
   struct cue_sheet_process_result* self,
   size_t line_num,
   char const* line) {
@@ -167,7 +167,7 @@ struct cue_status_info const* cue_sheet_process_result_add_error(
     error = cue_status_info_alloc_parse_error(line_num, line);
     ERR_REGION_NULL_CHECK(error, err);
 
-    added = self->errors->push(self->errors, error);
+    added = self->info_list->push(self->info_list, error);
     ERR_REGION_NULL_CHECK(added, err);
 
     self->has_errors = 1;
@@ -177,6 +177,60 @@ struct cue_status_info const* cue_sheet_process_result_add_error(
   } ERR_REGION_END()
 
   SAFE_FREE_HANDLER(error, cue_status_info_free);
+
+  return NULL;
+
+}
+
+struct cue_status_info const* cue_sheet_process_result_add_error(
+  struct cue_sheet_process_result* self,
+  char const* msg) {
+
+  errno_t err = 0;
+  cue_status_info_t* info = 0;
+  cue_status_info_t const* added = 0;
+
+  ERR_REGION_BEGIN() {
+
+    info = cue_status_info_alloc_error(msg);
+    ERR_REGION_NULL_CHECK(info, err);
+
+    added = self->info_list->push(self->info_list, info);
+    ERR_REGION_NULL_CHECK(added, err);
+
+    self->has_errors = 1;
+
+    return added;
+
+  } ERR_REGION_END()
+
+  SAFE_FREE_HANDLER(info, cue_status_info_free);
+
+  return NULL;
+
+}
+
+struct cue_status_info const* cue_sheet_process_result_add_status(
+  struct cue_sheet_process_result* self,
+  char const* msg) {
+
+  errno_t err = 0;
+  cue_status_info_t* info = 0;
+  cue_status_info_t const* added = 0;
+
+  ERR_REGION_BEGIN() {
+
+    info = cue_status_info_alloc_status(msg);
+    ERR_REGION_NULL_CHECK(info, err);
+
+    added = self->info_list->push(self->info_list, info);
+    ERR_REGION_NULL_CHECK(added, err);
+
+    return added;
+
+  } ERR_REGION_END()
+
+  SAFE_FREE_HANDLER(info, cue_status_info_free);
 
   return NULL;
 

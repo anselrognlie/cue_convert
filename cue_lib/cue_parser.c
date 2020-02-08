@@ -527,5 +527,5 @@ static char const* parse_time(char const* buf, cue_time_t* time) {
 static void safe_add_error(cue_sheet_process_result_t* result, size_t line_num, char const* line) {
   if (! result) return;
 
-  cue_sheet_process_result_add_error(result, line_num, line);
+  cue_sheet_process_result_add_parse_error(result, line_num, line);
 }
