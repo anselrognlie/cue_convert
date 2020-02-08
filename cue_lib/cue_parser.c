@@ -11,7 +11,7 @@
 #include "file_line_reader.h"
 #include "line_writer.h"
 #include "file_line_writer.h"
-#include "cue_sheet_parse_result.h"
+#include "cue_status_info.h"
 #include "err_helpers.h"
 
 static char const *skip_ws(char const *buf);

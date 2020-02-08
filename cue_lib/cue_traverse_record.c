@@ -6,7 +6,7 @@
 #include "char_vector.h"
 #include "cue_file.h"
 #include "mem_helpers.h"
-#include "cue_sheet_parse_result.h"
+#include "cue_status_info.h"
 
 static void* acquire(void const* instance);
 static void release(void* instance);

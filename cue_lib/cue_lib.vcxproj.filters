@@ -36,13 +36,13 @@
     <ClInclude Include="cue_traverse_report_writer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cue_sheet_parse_result.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="cue_options.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="cue_convert.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cue_status_info.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -68,13 +68,13 @@
     <ClCompile Include="cue_traverse_report_writer.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="cue_sheet_parse_result.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="cue_options.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="cue_convert.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cue_status_info.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

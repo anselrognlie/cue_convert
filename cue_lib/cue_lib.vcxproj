@@ -23,7 +23,7 @@
     <ClInclude Include="cue_file.h" />
     <ClInclude Include="cue_options.h" />
     <ClInclude Include="cue_parser.h" />
-    <ClInclude Include="cue_sheet_parse_result.h" />
+    <ClInclude Include="cue_status_info.h" />
     <ClInclude Include="cue_transform.h" />
     <ClInclude Include="cue_traverse.h" />
     <ClInclude Include="cue_traverse_record.h" />
@@ -35,7 +35,7 @@
     <ClCompile Include="cue_file.c" />
     <ClCompile Include="cue_options.c" />
     <ClCompile Include="cue_parser.c" />
-    <ClCompile Include="cue_sheet_parse_result.c" />
+    <ClCompile Include="cue_status_info.c" />
     <ClCompile Include="cue_transform.c" />
     <ClCompile Include="cue_traverse.c" />
     <ClCompile Include="cue_traverse_record.c" />

@@ -1,4 +1,4 @@
-#include "cue_sheet_parse_result.h"
+#include "cue_status_info.h"
 
 #include <string.h>
 #include <stdlib.h>

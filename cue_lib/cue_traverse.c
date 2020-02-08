@@ -12,7 +12,7 @@
 #include "cue_traverse_record.h"
 #include "cue_parser.h"
 #include "cue_file.h"
-#include "cue_sheet_parse_result.h"
+#include "cue_status_info.h"
 #include "cue_transform.h"
 #include "path.h"
 #include "file_line_writer.h"

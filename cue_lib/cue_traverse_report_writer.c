@@ -4,7 +4,7 @@
 
 #include "cue_traverse_report.h"
 #include "cue_traverse_record.h"
-#include "cue_sheet_parse_result.h"
+#include "cue_status_info.h"
 #include "char_vector.h"
 #include "line_writer.h"
 #include "err_helpers.h"

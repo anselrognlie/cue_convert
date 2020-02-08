@@ -4,7 +4,7 @@
 
 #include "cue_file.h"
 #include "cue_parser.h"
-#include "cue_sheet_parse_result.h"
+#include "cue_status_info.h"
 #include "cue_transform.h"
 #include "array_line_reader.h"
 #include "array_line_writer.h"
