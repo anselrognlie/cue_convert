@@ -226,6 +226,8 @@ struct cue_status_info const* cue_sheet_process_result_add_status(
     added = self->info_list->push(self->info_list, info);
     ERR_REGION_NULL_CHECK(added, err);
 
+    self->has_status = 1;
+
     return added;
 
   } ERR_REGION_END()

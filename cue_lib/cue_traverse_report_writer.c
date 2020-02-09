@@ -82,6 +82,29 @@ errno_t cue_traverse_report_writer_write(
 
     ERR_REGION_CMP_CHECK(!line_writer_write_fmt(writer, "%s%d", "Failed total: ", report->failed_cue_count), err);
 
+    ERR_REGION_CMP_CHECK(!line_writer_write_fmt(writer, "%s", "Skipped files:"), err);
+
+    for (int i = 0; i < report->skipped_cue_count; ++i) {
+      cue_traverse_record_t const* record = report->skipped_list->get(report->skipped_list, i);
+      ERR_REGION_CMP_CHECK(!line_writer_write_fmt(writer, "%s%s%s%s", "  ", record->source_path, " -> ", record->target_path), err);
+
+      if (record->result->has_status) {
+        ERR_REGION_CMP_CHECK(!line_writer_write_fmt(writer, "%s%s", "    ", "Status:"), err);
+
+        cue_status_info_vector_t* info_list = record->result->info_list;
+        for (size_t j = 0; j < info_list->get_length(info_list); ++j) {
+          cue_status_info_t const* info = info_list->get(info_list, j);
+          if (info->type == EWC_CST_STATUS)
+          {
+            ERR_REGION_CMP_CHECK(!line_writer_write_fmt(writer, "%s%s%s%s", "      ",
+              "*", " ", info->detail), err);
+          }
+        } ERR_REGION_ERROR_BUBBLE(err)
+      }
+    } ERR_REGION_ERROR_BUBBLE(err)
+
+    ERR_REGION_CMP_CHECK(!line_writer_write_fmt(writer, "%s%d", "Skipped total: ", report->skipped_cue_count), err);
+
   } ERR_REGION_END()
 
   return err;

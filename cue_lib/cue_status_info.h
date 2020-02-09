@@ -28,6 +28,7 @@ DECLARE_OBJECT_VECTOR(cue_status_info_vector, cue_status_info_t);
 
 typedef struct cue_sheet_process_result {
   short has_errors;
+  short has_status;
   cue_status_info_vector_t* info_list;
 } cue_sheet_process_result_t;
 
