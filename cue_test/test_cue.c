@@ -510,7 +510,7 @@ errno_t test_cue_options(void) {
       ERR_REGION_ERROR_CHECK(cue_options_init(&opts), err);
 
       char const *argv[] = {
-        "-Q",
+        "-Qf",
         "-r",
         "report path",
         "src dir",
@@ -525,7 +525,7 @@ errno_t test_cue_options(void) {
         .report_path = "report path",
         .quiet = 1,
         .test_only = 0,
-        .overwrite = 0,
+        .overwrite = 1,
         .quality = 3,
       };
 

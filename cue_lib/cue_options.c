@@ -83,21 +83,51 @@ errno_t cue_options_load_from_args(struct cue_options* self, int argc, char cons
       }
 
       // must be a short option
-      ERR_REGION_CMP_CHECK((!*(arg + 1) || *(arg + 2)), err);
+      ERR_REGION_CMP_CHECK((!*(arg + 1)), err);
+
+      // check (possibly clumped) single letter options
+      short done = 0;
+      short still_looking = 0;
+
+      while (! done) {
+        switch (*(arg + 1)) {
+          case 'Q':
+            quiet = 1;
+            break;
+
+          case 't':
+            test_only = 1;
+            break;
+
+          case 'f':
+            overwrite = 1;
+            break;
+
+          default:
+            // if not last option, error
+            if (*(arg + 2)) {
+              err = -1;
+            }
+            else {
+              // if the last letter, this might be an arg option
+              done = 1;
+              still_looking = 1;
+            }
+            break;
+
+        } ERR_REGION_ERROR_BUBBLE(err)
+
+        // move forward along options
+        if (!done) {
+          ++arg;
+          done = !*(arg + 1);
+        }
+        
+      } ERR_REGION_ERROR_BUBBLE(err)
+
+      if (! still_looking) continue;
 
       switch (*(arg + 1)) {
-        case 'Q':
-          quiet = 1;
-        break;
-
-        case 't':
-          test_only = 1;
-          break;
-
-        case 'f':
-          overwrite = 1;
-          break;
-
         case 'r':
           if (i > argc-2) {
             err = -1; 
@@ -127,6 +157,8 @@ errno_t cue_options_load_from_args(struct cue_options* self, int argc, char cons
         err = -1;
 
       } ERR_REGION_ERROR_BUBBLE(err);
+
+      // check options with args
 
     } ERR_REGION_ERROR_BUBBLE(err);
 
