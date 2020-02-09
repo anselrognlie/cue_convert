@@ -678,7 +678,8 @@ errno_t test_cue_overwrite(void) {
 
     // make sure nothing was converted
     ERR_REGION_NULL_CHECK(report, err);
-    ERR_REGION_CMP_CHECK(report->found_cue_count != 0, err);
+    ERR_REGION_CMP_CHECK(report->found_cue_count != 2, err);
+    ERR_REGION_CMP_CHECK(report->skipped_cue_count != 2, err);
 
     // reset values to reuse
     SAFE_FREE_HANDLER(report, cue_traverse_report_free);

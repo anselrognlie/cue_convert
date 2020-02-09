@@ -51,6 +51,7 @@ static short ctv_visit(parallel_visitor_t *self_t, parallel_visitor_state_t cons
   short transformed = 0;
   cue_traverse_report_t *report = self->report;
   line_writer_i *writer = 0;
+  char *buf = 0;
 
   ERR_REGION_BEGIN() {
 
@@ -72,6 +73,9 @@ static short ctv_visit(parallel_visitor_t *self_t, parallel_visitor_state_t cons
 
       dst_path = state->parallel_path;
 
+      record = cue_traverse_record_alloc_with_paths(dst_path, src_path);
+      ERR_REGION_NULL_CHECK_CODE(record, keep_traversing, 0);
+
       // if the destination already exists, and we are not in overwrite mode,
       // just terminate this visit
 
@@ -80,7 +84,20 @@ static short ctv_visit(parallel_visitor_t *self_t, parallel_visitor_state_t cons
           ERR_REGION_CMP_CHECK_CODE(
             !line_writer_write_fmt(writer, "%s%s", "  ", "skipping, already exists."),
             keep_traversing, 0);
-          ERR_REGION_EXIT();
+          ERR_REGION_NULL_CHECK_CODE(buf = msnprintf("%s already exists.", dst_path), 
+            keep_traversing, 0);
+          ERR_REGION_NULL_CHECK_CODE(
+            cue_sheet_process_result_add_status(record->result, buf), 
+            keep_traversing, 0);
+          SAFE_FREE(buf);
+          ERR_REGION_NULL_CHECK_CODE(
+            cue_traverse_report_add_record(report, record, EWC_CTR_SKIPPED),
+            keep_traversing, 0);
+
+          // don't need the source path
+          SAFE_FREE(src_path);
+
+          return keep_traversing;
         }
         else {
           ERR_REGION_CMP_CHECK_CODE(
@@ -89,10 +106,7 @@ static short ctv_visit(parallel_visitor_t *self_t, parallel_visitor_state_t cons
         }
       }
 
-      record = cue_traverse_record_alloc_with_paths(dst_path, src_path);
-      ERR_REGION_NULL_CHECK_CODE(record, keep_traversing, 0);
-
-      // don't need the paths any longer
+      // don't need the source path
       SAFE_FREE(src_path);
 
       // try to convert
@@ -103,7 +117,8 @@ static short ctv_visit(parallel_visitor_t *self_t, parallel_visitor_state_t cons
         keep_traversing, 0);
 
       // add the appropriate report category
-      added = cue_traverse_report_add_record(report, record, transformed);
+      added = cue_traverse_report_add_record(report, record,
+        transformed ? EWC_CTR_TRANSFORMED : EWC_CTR_FAILED);
       ERR_REGION_NULL_CHECK_CODE(added, keep_traversing, 0);
     }
 
@@ -113,6 +128,7 @@ static short ctv_visit(parallel_visitor_t *self_t, parallel_visitor_state_t cons
 
   SAFE_FREE_HANDLER(record, cue_traverse_record_free);
   SAFE_FREE(src_path);
+  SAFE_FREE(buf);
 
   return keep_traversing;
 }
