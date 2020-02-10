@@ -29,6 +29,7 @@
     <ClCompile Include="test_getline.c" />
     <ClCompile Include="test_helpers.c" />
     <ClCompile Include="test_dirs.c" />
+    <ClCompile Include="test_regex.c" />
     <ClCompile Include="test_vector.c" />
     <ClCompile Include="test_visitors.c" />
   </ItemGroup>
@@ -108,7 +109,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>cue_lib.lib;read_write.lib;omnibus.lib;collection.lib;libogg.lib;libvorbis.lib;liboggenc.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>cue_lib.lib;read_write.lib;omnibus.lib;collection.lib;libogg.lib;libvorbis.lib;liboggenc.lib;libregex.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -144,7 +145,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>cue_lib.lib;read_write.lib;omnibus.lib;collection.lib;libogg.lib;libvorbis.lib;liboggenc.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>cue_lib.lib;read_write.lib;omnibus.lib;collection.lib;libogg.lib;libvorbis.lib;liboggenc.lib;libregex.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>

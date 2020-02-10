@@ -23,12 +23,14 @@
     <ClInclude Include="file_helpers.h" />
     <ClInclude Include="format_helpers.h" />
     <ClInclude Include="mem_helpers.h" />
+    <ClInclude Include="regex_helper.h" />
     <ClInclude Include="string_helpers.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="file_helpers.c" />
     <ClCompile Include="format_helpers.c" />
     <ClCompile Include="mem_helpers.c" />
+    <ClCompile Include="regex_helper.c" />
     <ClCompile Include="string_helpers.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -103,6 +105,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>..\libregex\src</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -133,6 +136,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>..\libregex\src</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

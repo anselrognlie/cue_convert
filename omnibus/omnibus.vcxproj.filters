@@ -30,6 +30,9 @@
     <ClInclude Include="err_helpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="regex_helper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="file_helpers.c">
@@ -42,6 +45,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="string_helpers.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="regex_helper.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

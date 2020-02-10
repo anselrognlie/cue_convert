@@ -47,5 +47,8 @@
     <ClCompile Include="test_visitors.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test_regex.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -20,6 +20,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "read_write", "read_write\re
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "omnibus", "omnibus\omnibus.vcxproj", "{DF4189C0-8CFC-44FE-9160-B54F81D7BCAF}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1A0870B4-6396-429F-ABBB-9D72A7F0AE06} = {1A0870B4-6396-429F-ABBB-9D72A7F0AE06}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cue_lib", "cue_lib\cue_lib.vcxproj", "{6BE9E6F2-CBBE-4CB9-B18D-2B4EE52A21D9}"
 	ProjectSection(ProjectDependencies) = postProject

@@ -46,6 +46,7 @@ int main(int argc, char const* argv[]) {
   result = test_cue_convert() || result;
   result = test_cue_overwrite() || result;
   result = test_copy_dir() || result;
+  result = test_regex() || result;
 
   printf("%s\n", result ? "FAILURE!" : "All passed.");
 }
