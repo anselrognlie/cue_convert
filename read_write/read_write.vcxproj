@@ -32,6 +32,7 @@
     <ClInclude Include="parallel_visitor.h" />
     <ClInclude Include="path.h" />
     <ClInclude Include="path_shared.h" />
+    <ClInclude Include="read_write.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="array_line_reader.c" />
@@ -45,6 +46,7 @@
     <ClCompile Include="parallel_visitor.c" />
     <ClCompile Include="path_shared.c" />
     <ClCompile Include="path_win.c" />
+    <ClCompile Include="read_write.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

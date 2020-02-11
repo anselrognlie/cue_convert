@@ -54,6 +54,9 @@
     <ClInclude Include="parallel_visitor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="read_write.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="array_line_reader.c">
@@ -87,6 +90,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="parallel_visitor.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="read_write.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

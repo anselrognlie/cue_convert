@@ -27,3 +27,4 @@ errno_t test_cue_convert(void);
 errno_t test_cue_overwrite(void);
 errno_t test_copy_dir(void);
 errno_t test_regex(void);
+errno_t test_read_write_all(void);

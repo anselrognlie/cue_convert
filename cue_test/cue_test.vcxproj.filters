@@ -50,5 +50,8 @@
     <ClCompile Include="test_regex.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test_readwrite.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

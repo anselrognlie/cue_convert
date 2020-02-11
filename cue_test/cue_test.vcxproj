@@ -29,6 +29,7 @@
     <ClCompile Include="test_getline.c" />
     <ClCompile Include="test_helpers.c" />
     <ClCompile Include="test_dirs.c" />
+    <ClCompile Include="test_readwrite.c" />
     <ClCompile Include="test_regex.c" />
     <ClCompile Include="test_vector.c" />
     <ClCompile Include="test_visitors.c" />
