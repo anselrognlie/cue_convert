@@ -6,16 +6,19 @@
 #include "mem_helpers.h"
 
 static const char k_help_message[] = 
-"[-tQf] [-q quality] [-r report_path] source_directory target_directory\n"
+"[-tQw] [-f filter_path] [-q quality] [-r report_path] source_directory target_directory\n"
 "\n"
 "-t - test mode - just examine the cues, don't convert\n"
 "-Q - quiet mode - no console output\n"
-"-f - force overwrite - force reconversion if a target cue file\n"
+"-w - force overwrite - force reconversion if a target cue file\n"
 "                       is already found\n"
 "-r report_path - report location - where the conversion report\n"
 "                 will be written.  If not supplied, the report\n"
 "                 will not be saved, but will still be written to\n"
 "                 the console if not in quiet mode.\n"
+"-f filter_path - filter file - a file of regular expressions\n"
+"                 which, if matched, will prevent a cue file\n"
+"                 from being processed.\n"
 "-q quality - compression quality - quality should be a number\n"
 "             between -1 (poorest) and 10 (best).  Fractional\n"
 "             values are permitted.  Defaults to 3.\n"
@@ -48,6 +51,7 @@ void cue_options_uninit(struct cue_options* self) {
   SAFE_FREE(self->source_dir);
   SAFE_FREE(self->target_dir);
   SAFE_FREE(self->report_path);
+  SAFE_FREE(self->filter_path);
 }
 
 void cue_options_free(struct cue_options* self) {
@@ -58,9 +62,11 @@ void cue_options_free(struct cue_options* self) {
 errno_t cue_options_load_from_args(struct cue_options* self, int argc, char const** argv) {
   errno_t err = 0;
   char const* report_path = 0;
+  char const* filter_path = 0;
   char const* src_dir = 0;
   char const* trg_dir = 0;
   char const* report_path_dup = 0;
+  char const* filter_path_dup = 0;
   char const* src_dir_dup = 0;
   char const* trg_dir_dup = 0;
   short quiet = 0;
@@ -99,7 +105,7 @@ errno_t cue_options_load_from_args(struct cue_options* self, int argc, char cons
             test_only = 1;
             break;
 
-          case 'f':
+          case 'w':
             overwrite = 1;
             break;
 
@@ -136,6 +142,15 @@ errno_t cue_options_load_from_args(struct cue_options* self, int argc, char cons
             report_path = argv[++i];
           }
         break;
+
+        case 'f':
+          if (i > argc - 2) {
+            err = -1;
+          }
+          else {
+            filter_path = argv[++i];
+          }
+          break;
 
         case 'q':
           if (i > argc - 2) {
@@ -175,15 +190,18 @@ errno_t cue_options_load_from_args(struct cue_options* self, int argc, char cons
     ERR_REGION_NULL_CHECK(src_dir_dup = _strdup(src_dir), err);
     ERR_REGION_NULL_CHECK(trg_dir_dup = _strdup(trg_dir), err);
     if (report_path) ERR_REGION_NULL_CHECK(report_path_dup = _strdup(report_path), err);
+    if (filter_path) ERR_REGION_NULL_CHECK(filter_path_dup = _strdup(filter_path), err);
 
     // everything we need is allocated, so release existing resources and update
     SAFE_FREE(self->source_dir);
     SAFE_FREE(self->target_dir);
     SAFE_FREE(self->report_path);
+    SAFE_FREE(self->filter_path);
 
     self->source_dir = src_dir_dup;
     self->target_dir = trg_dir_dup;
     self->report_path = report_path_dup;
+    self->filter_path = filter_path_dup;
     self->generate_report = (report_path != 0);
     self->quiet = quiet;
     self->test_only = test_only;
@@ -197,6 +215,7 @@ errno_t cue_options_load_from_args(struct cue_options* self, int argc, char cons
   SAFE_FREE(src_dir_dup);
   SAFE_FREE(trg_dir_dup);
   SAFE_FREE(report_path_dup);
+  SAFE_FREE(filter_path_dup);
 
   return err;
 }

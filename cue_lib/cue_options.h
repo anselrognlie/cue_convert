@@ -5,8 +5,9 @@
 typedef struct cue_options {
   char const *source_dir;
   char const *target_dir;
+  char const* report_path;
+  char const* filter_path;
   short generate_report;
-  char const *report_path;
   short quiet;
   short test_only;
   short overwrite;

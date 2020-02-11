@@ -17,6 +17,8 @@ typedef struct cue_traverse_visitor_opts {
   short overwrite;
   float quality;
   struct line_writer *writer;  // weak ref
+  char const * const *filters;  // weak ref
+  int num_filters;
 } cue_traverse_visitor_opts_t;
 
 typedef struct cue_traverse_visitor {
@@ -27,6 +29,8 @@ typedef struct cue_traverse_visitor {
   short overwrite;
   float quality;
   struct line_writer* writer;  // weak ref
+  char const* const* filters;  // weak ref
+  int num_filters;
 } cue_traverse_visitor_t;
 
 errno_t cue_traverse_visitor_init(cue_traverse_visitor_t* self, cue_traverse_visitor_opts_t const *opts);

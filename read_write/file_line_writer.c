@@ -31,6 +31,7 @@ errno_t file_line_writer_init_path(file_line_writer_t* self, char const* path) {
 void file_line_writer_uninit(file_line_writer_t* self) {
   if (self->close_file_on_uninit) {
     SAFE_FREE_HANDLER(self->fid, fclose);
+    self->close_file_on_uninit = 0;
   }
 }
 

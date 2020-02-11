@@ -12,13 +12,11 @@ errno_t read_write_all_lines(struct line_reader* reader, struct line_writer* wri
   char *line = 0;
   size_t bytes_read;
   size_t bytes_written;
-  size_t line_len;
 
   while (reader->read_line(reader, &line, &bytes_read) != EOF) {
-    line_len = strlen(line);
     bytes_written = writer->write_line(writer, line);
     SAFE_FREE(line);
-    if (bytes_written != line_len) {
+    if (bytes_written != bytes_read) {
       err = -1;
       break;
     }

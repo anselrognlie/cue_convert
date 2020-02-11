@@ -60,3 +60,13 @@ short regex_matches(char const* pattern, char const* str) {
 
   return matches;
 }
+
+short regex_matches_any(char const* const* patterns, int num_filters, char const* str) {
+  for (int i = 0; i < num_filters; ++i) {
+    if (regex_matches(patterns[i], str)) {
+      return 1;
+    }
+  }
+
+  return 0;
+}

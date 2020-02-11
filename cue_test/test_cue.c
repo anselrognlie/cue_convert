@@ -510,7 +510,7 @@ errno_t test_cue_options(void) {
       ERR_REGION_ERROR_CHECK(cue_options_init(&opts), err);
 
       char const *argv[] = {
-        "-Qf",
+        "-Qw",
         "-r",
         "report path",
         "src dir",
@@ -686,7 +686,7 @@ errno_t test_cue_overwrite(void) {
     report = 0;
 
     // do the convert again, but with force
-    ERR_REGION_NULL_CHECK(argv->insert_at(argv, 2, "-f"), err);
+    ERR_REGION_NULL_CHECK(argv->insert_at(argv, 2, "-w"), err);
 
     ERR_REGION_ERROR_CHECK(cue_convert_with_args(
       argv->get_length(argv),

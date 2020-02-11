@@ -17,6 +17,7 @@
 #include "path.h"
 #include "file_line_writer.h"
 #include "format_helpers.h"
+#include "regex_helper.h"
 
 #include "oggenc.h"
 
@@ -52,10 +53,12 @@ static short ctv_visit(parallel_visitor_t *self_t, parallel_visitor_state_t cons
   cue_traverse_report_t *report = self->report;
   line_writer_i *writer = 0;
   char *buf = 0;
+  char const *filename = 0;
 
   ERR_REGION_BEGIN() {
 
-    if (is_cue_file(entry->get_name(entry))) {
+    filename = entry->get_name(entry);
+    if (is_cue_file(filename)) {
       // found a cue
 
       writer = self->writer;
@@ -63,7 +66,7 @@ static short ctv_visit(parallel_visitor_t *self_t, parallel_visitor_state_t cons
       // create a traverse record for this
       src_path = join_dir_file_path(
         directory->get_path(directory),
-        entry->get_name(entry)
+        filename
       );
       ERR_REGION_NULL_CHECK_CODE(src_path, keep_traversing, 0);
 
@@ -103,6 +106,29 @@ static short ctv_visit(parallel_visitor_t *self_t, parallel_visitor_state_t cons
           ERR_REGION_CMP_CHECK_CODE(
             !line_writer_write_fmt(writer, "%s%s", "  ", "overwriting... "),
             keep_traversing, 0);
+        }
+      }
+
+      // if we have filters, check whether to filter this one out
+      if (self->num_filters) {
+        if (regex_matches_any(self->filters, self->num_filters, filename)) {
+          ERR_REGION_CMP_CHECK_CODE(
+            !line_writer_write_fmt(writer, "%s%s", "  ", "skipping, matches filter."),
+            keep_traversing, 0);
+          ERR_REGION_NULL_CHECK_CODE(buf = msnprintf("%s matched a filter.", filename),
+            keep_traversing, 0);
+          ERR_REGION_NULL_CHECK_CODE(
+            cue_sheet_process_result_add_status(record->result, buf),
+            keep_traversing, 0);
+          SAFE_FREE(buf);
+          ERR_REGION_NULL_CHECK_CODE(
+            cue_traverse_report_add_record(report, record, EWC_CTR_SKIPPED),
+            keep_traversing, 0);
+
+          // don't need the source path
+          SAFE_FREE(src_path);
+
+          return keep_traversing;
         }
       }
 
@@ -150,6 +176,8 @@ errno_t cue_traverse_visitor_init(cue_traverse_visitor_t* self,
     self->overwrite = opts->overwrite;
     self->quality = opts->quality;
     self->writer = opts->writer;
+    self->filters = opts->filters;
+    self->num_filters = opts->num_filters;
 
     ERR_REGION_NULL_CHECK(source_path_str = _strdup(opts->source_path), err);
 

@@ -8,11 +8,14 @@
 #include "format_helpers.h"
 #include "cue_traverse.h"
 #include "directory_traversal.h"
+#include "file_line_reader.h"
 #include "file_line_writer.h"
 #include "null_line_writer.h"
+#include "array_line_writer.h"
 #include "cue_traverse_report.h"
 #include "cue_traverse_report_writer.h"
 #include "path.h"
+#include "read_write.h"
 
 errno_t cue_convert(
   struct cue_options* opts, 
@@ -29,6 +32,8 @@ errno_t cue_convert(
   cue_traverse_report_writer_t report_out_writer = { 0 };
   cue_traverse_report_t *report = 0;
   cue_traverse_visitor_opts_t visitor_opts = { 0 };
+  file_line_reader_t filter_reader = { 0 };
+  array_line_writer_t filter_data = { 0 };
 
   ERR_REGION_BEGIN() {
     if (opts->generate_report) {
@@ -64,6 +69,15 @@ errno_t cue_convert(
     visitor_opts.overwrite = opts->overwrite;
     visitor_opts.quality = opts->quality;
 
+    if (opts->filter_path) {
+      ERR_REGION_ERROR_CHECK(file_line_reader_init_path(&filter_reader, opts->filter_path), err);
+      array_line_writer_init(&filter_data);
+      ERR_REGION_ERROR_CHECK(read_write_all_lines(&filter_reader.line_reader, &filter_data.line_writer), err);
+      file_line_reader_uninit(&filter_reader);
+      visitor_opts.filters = filter_data.lines;
+      visitor_opts.num_filters = filter_data.num_lines;
+    }
+
     ERR_REGION_ERROR_CHECK(cue_traverse_visitor_init(
       &visitor,
       &visitor_opts), err);
@@ -85,6 +99,8 @@ errno_t cue_convert(
 
   } ERR_REGION_END()
 
+  file_line_reader_uninit(&filter_reader);
+  array_line_writer_uninit(&filter_data);
   cue_traverse_report_writer_uninit(&report_file_writer);
   cue_traverse_report_writer_uninit(&report_out_writer);
   cue_traverse_visitor_uninit(&visitor);
